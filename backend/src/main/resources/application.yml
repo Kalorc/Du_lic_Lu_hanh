@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: tour-discovery
+  datasource:
+    url: jdbc:h2:mem:tourdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+  jpa:
+    hibernate:
+      ddl-auto: none
+    defer-datasource-initialization: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jackson:
+    default-property-inclusion: always
+
+app:
+  jwt:
+    secret: "doi-mat-khau-nay-trong-moi-truong-that-32-ky-tu-tro-len-ptit-2026"
+    expiration-minutes: 480
+  cors:
+    allowed-origins: "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+
+logging:
+  level:
+    vn.ptit.tour: INFO

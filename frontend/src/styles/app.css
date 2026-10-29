@@ -1,0 +1,258 @@
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #e3e6ea;
+  --text: #1b2430;
+  --muted: #6b7482;
+  --brand: #0f6fd1;
+  --brand-dark: #0b57a4;
+  --brand-soft: #e8f1fb;
+  --good: #0f7b55;
+  --good-soft: #e4f4ec;
+  --warn: #9a5b00;
+  --warn-soft: #fdf1dd;
+  --danger: #b4231f;
+  --danger-soft: #fdeceb;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(20, 30, 45, 0.06), 0 4px 12px rgba(20, 30, 45, 0.05);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- Khung trang ---------- */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.brand { font-weight: 700; font-size: 16px; color: var(--text); }
+.brand span { color: var(--brand); }
+.nav { display: flex; gap: 18px; margin-left: auto; align-items: center; }
+.nav a { color: var(--muted); font-weight: 500; }
+.nav a.active { color: var(--brand); }
+.nav .who { color: var(--muted); font-size: 13px; }
+
+.page { max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; }
+.page-head { margin-bottom: 18px; }
+.page-head h1 { margin: 0 0 4px; font-size: 22px; }
+.page-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+.layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+/* ---------- Thanh phan chung ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card-pad { padding: 16px; }
+
+.panel { position: sticky; top: 78px; }
+.panel h2 { margin: 0 0 14px; font-size: 15px; }
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.field .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+input[type="text"], input[type="number"], input[type="password"], select, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font: inherit;
+  background: #fff;
+  color: var(--text);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: var(--brand);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover { background: var(--brand-dark); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-ghost { background: #fff; color: var(--text); border-color: var(--border); }
+.btn-ghost:hover { background: #f2f4f7; }
+.btn-sm { padding: 5px 10px; font-size: 13px; }
+.btn-row { display: flex; gap: 8px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 13px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.chip:hover { border-color: var(--brand); }
+.chip.on { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-dark); font-weight: 600; }
+.chip.off { opacity: 0.55; }
+
+.switch { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.switch input { width: auto; }
+
+/* ---------- Ket qua tour ---------- */
+.result-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.result-count { font-size: 14px; color: var(--muted); }
+.result-count strong { color: var(--text); }
+
+.tour-list { display: flex; flex-direction: column; gap: 12px; }
+
+.tour-card { display: grid; grid-template-columns: 200px 1fr; gap: 0; overflow: hidden; }
+@media (max-width: 680px) { .tour-card { grid-template-columns: 1fr; } }
+
+.tour-thumb {
+  background: linear-gradient(135deg, #dce8f5, #eef3f8);
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 10px;
+}
+.tour-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.tour-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.tour-title { margin: 0; font-size: 17px; }
+.tour-title a { color: var(--text); }
+.tour-meta { font-size: 13px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+.tour-summary { margin: 0; font-size: 14px; color: #3d4756; }
+
+.tour-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.price-from { font-size: 12px; color: var(--muted); }
+.price { font-size: 19px; font-weight: 700; color: var(--brand-dark); }
+.price-basis { font-size: 12px; color: var(--muted); }
+
+.score {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.score-badge {
+  font-weight: 700;
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--good-soft);
+  color: var(--good);
+}
+.score-badge.mid { background: var(--warn-soft); color: var(--warn); }
+.score-badge.zero { background: #eef0f3; color: var(--muted); }
+.score-reason { font-size: 12px; color: var(--muted); max-width: 320px; text-align: right; }
+
+.tag { font-size: 12px; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; color: var(--muted); }
+.tag.matched { background: var(--good-soft); border-color: #bfe3d2; color: var(--good); font-weight: 600; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- Trang thai ---------- */
+.notice {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  border: 1px solid;
+}
+.notice.error { background: var(--danger-soft); border-color: #f3c9c7; color: var(--danger); }
+.notice.ok { background: var(--good-soft); border-color: #bfe3d2; color: var(--good); }
+.notice.info { background: var(--brand-soft); border-color: #c8ddf4; color: var(--brand-dark); }
+.notice code { font-size: 12px; }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty h3 { margin: 0 0 6px; color: var(--text); font-size: 16px; }
+
+.skeleton { height: 150px; border-radius: var(--radius); background: linear-gradient(90deg, #eef1f4, #f7f8fa, #eef1f4); background-size: 200% 100%; animation: sk 1.2s infinite; }
+@keyframes sk { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ---------- Phan trang ---------- */
+.pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; }
+.pager span { font-size: 14px; color: var(--muted); }
+
+/* ---------- Chi tiet tour ---------- */
+.detail-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
+.detail-hero { height: 260px; border-radius: var(--radius); overflow: hidden; background: linear-gradient(135deg, #dce8f5, #eef3f8); margin-bottom: 16px; }
+.detail-hero img { width: 100%; height: 100%; object-fit: cover; }
+.section { margin-bottom: 22px; }
+.section h2 { font-size: 16px; margin: 0 0 10px; }
+.itinerary { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.itinerary li { border-left: 3px solid var(--brand); padding: 2px 0 2px 12px; }
+.itinerary .day { font-size: 12px; color: var(--muted); font-weight: 600; }
+.bullets { margin: 0; padding-left: 20px; }
+.bullets li { margin-bottom: 4px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+tbody tr:last-child td { border-bottom: none; }
+
+.pill { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+.pill.open { background: var(--good-soft); color: var(--good); }
+.pill.closed { background: #eef0f3; color: var(--muted); }
+.pill.draft { background: var(--warn-soft); color: var(--warn); }
+
+/* ---------- Quan tri ---------- */
+.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+.login-box { max-width: 380px; margin: 40px auto; }
+.kv { display: grid; grid-template-columns: 150px 1fr; gap: 6px 12px; font-size: 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+.meta-box { font-size: 12px; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, monospace; word-break: break-all; }
