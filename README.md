@@ -1,222 +1,170 @@
-# Module Tra cứu Tour và Gợi ý Tour theo Sở thích
+# Module A — Tra cứu Tour và gợi ý Tour theo sở thích
 
-Hiện thực module theo đặc tả `MODULE TRA CỨU TOUR VÀ GỢI Ý TOUR THEO SỞ THÍCH.docx`
-của đề tài *Phần mềm Quản lý Du lịch và Lữ hành Thông minh* (Nhóm 09).
+Sản phẩm thực hành của Nhóm 09 trong học phần Quản lý Dự án Phần mềm, PTIT. Module cung cấp tra cứu/lọc Tour, xếp hạng theo tỷ lệ trùng sở thích, xem chi tiết và quản trị sở thích trên phiên bản nháp.
 
-Kiến trúc đúng theo đặc tả:
+Booking, giữ chỗ, thanh toán, AI tư vấn và bản đồ thuộc kế hoạch toàn hệ thống. Trong Module A, dữ liệu giá/chỗ dùng để chọn kết quả hiển thị.
 
-```
-Tầng giao diện (React) → Auth(JWT) → Controller → Service → Repository → DB
-```
+## Tài liệu và dữ liệu đi kèm
 
-| Thành phần | Công nghệ |
-|---|---|
-| Backend | Java 21, Spring Boot 3.3.5, Spring Data JPA, Spring Security + JWT (jjwt) |
-| CSDL | H2 in-memory, `MODE=PostgreSQL`, nạp sẵn `schema.sql` + `data.sql` |
-| Frontend | React 18 + Vite 6.4.6, React Router 7.18.5 |
+| Tệp | Nội dung |
+| --- | --- |
+| [Hướng dẫn chạy](HUONG_DAN_CHAY_VA_DEMO.md) | Cài công cụ, chạy/dừng/reset, API, kiểm thử và xử lý lỗi |
+| [Kịch bản chạy thử](KICH_BAN_DEMO_TRUOC_GIANG_VIEN.md) | Thao tác và kết quả mong đợi cho người trình bày/người kiểm tra |
+| [Danh mục dữ liệu mẫu](docs/demo/DU_LIEU_MAU.md) | Tour, phiên bản, tag, giá và kết quả đối chứng |
+| [schema.sql](backend/src/main/resources/schema.sql) | Lược đồ 10 bảng và ràng buộc khởi tạo |
+| [data.sql](backend/src/main/resources/data.sql) | Dữ liệu tổng hợp cho demo và test |
+| [Hợp đồng API](docs/qa/API_CONTRACT_Module_A.md) | Tham số, kiểu dữ liệu, mã lỗi và quyền |
+| [Quyết định nghiệp vụ](docs/qa/module-a-contract-decisions.md) | A-ADR-01–04 và nội dung hiệu năng chờ xác nhận |
+| [PostgreSQL](CHUYEN_SANG_POSTGRESQL.md) | Thiết lập cơ sở dữ liệu QA riêng |
+| [Nguồn ảnh](frontend/public/images/credits.html) | Tác giả, nguồn và giấy phép ảnh công khai |
 
----
+## Công nghệ và công cụ
 
-## 1. Chạy và trình bày demo
+| Thành phần | Phiên bản/cấu hình |
+| --- | --- |
+| Backend | JDK 21, Maven 3.9+, Spring Boot 3.3.5 |
+| Frontend | Node.js 20+, React 18.3.1, Vite 6.4.6, React Router 7.18.5 |
+| Browser test | Playwright 1.58.2 và Chromium tương ứng |
+| Demo | H2 trong bộ nhớ, chế độ tương thích PostgreSQL |
+| Script demo | Windows và PowerShell 7; Java/Maven/Node/npm trong PATH |
 
-Xem [hướng dẫn chạy đã kiểm chứng](HUONG_DAN_CHAY_VA_DEMO.md) và [kịch bản6 phút30 giây](KICH_BAN_DEMO_TRUOC_GIANG_VIEN.md).
+Lần cài đầu cần mạng để tải dependency và Chromium. Ảnh Tour được phục vụ cục bộ từ nguồn đi kèm.
 
-Trong PowerShell tại repository:
+## Chạy nhanh trên Windows
 
-```powershell
-$demoRuntime = 'E:\2.PTIT\QLDA\module-a-demo-runtime-20261121\local-demo'
+Clone repository có phiên bản này, chọn đúng nhánh rồi mở PowerShell tại thư mục có backend/, frontend/ và scripts/.
+
+~~~powershell
+java -version
+mvn -version
+node --version
+npm --version
+
+$demoRuntime = Join-Path $env:LOCALAPPDATA 'TourDiscoveryDemo'
 $demoCredential = Join-Path $demoRuntime 'credential.clixml'
-& '.\scripts\demo\Set-DemoPassword.ps1' -CredentialPath $demoCredential
-& '.\scripts\demo\Start-Demo.ps1' -RuntimeRoot $demoRuntime -CredentialPath $demoCredential
-```
 
-Nhập mật khẩu riêng tối thiểu12 ký tự ở lời nhắc ẩn; credential DPAPI nằm ngoài Git. Script tạo bản sao sạch, chạy `mvn clean verify`, `npm ci`, `npm run build`, khởi tạo H2 memory rồi mở backend18080/frontend15173 trên loopback. Website: http://127.0.0.1:15173/tours; đăng nhập: http://127.0.0.1:15173/admin. Không dừng các dịch vụ sẵn có ở8080/5173. Xem hướng dẫn đầy đủ để chạy test, dừng/reset và khởi động lại bằng `-SkipBuild`.
+& .\scripts\demo\Set-DemoPassword.ps1 -CredentialPath $demoCredential
+& .\scripts\demo\Start-Demo.ps1 -RuntimeRoot $demoRuntime -CredentialPath $demoCredential
+~~~
 
-Ảnh Tour có nguồn/tác giả/giấy phép tại [attribution](frontend/public/images/credits.html); toàn bộ ảnh được phục vụ local. CSDL H2 demo tạo lại từ schema/data mỗi lần khởi động; các thay đổi tag demo không được lưu lâu dài. Profile demo tắt H2 Console.
+Nhập mật khẩu do bạn đặt, tối thiểu 12 ký tự, tại lời nhắc ẩn. Credential được mã hóa bằng DPAPI cho tài khoản Windows hiện tại. Trên máy khác, tạo lại credential.
 
-Phát triển thủ công vẫn dùng cấu hình mặc định backend8080 và Vite5173 nếu cổng trống. **Tài khoản mẫu chỉ được tạo ở profile demo/test và khi có APP_DEMO_PASSWORD**; đặt mật khẩu ở profile mặc định/production không bật seed. Khóa JWT ngẫu nhiên theo JVM nếu không cấp APP_JWT_SECRET. Không ghi password, token hoặc secret vào Git/log.
+Script tạo bản sao nguồn trong runtime, chạy mvn clean verify, npm ci và npm run build rồi chờ backend và Vite sẵn sàng. Khi thành công, script in URL và vị trí log.
 
----
+| Địa chỉ mặc định | Chức năng |
+| --- | --- |
+| http://127.0.0.1:15173/tours | Tra cứu và gợi ý |
+| http://127.0.0.1:15173/tours/101 | Chi tiết Tour 101 |
+| http://127.0.0.1:15173/admin | Đăng nhập và quản trị sở thích |
+| http://127.0.0.1:18080/api/v1/tours?page=1&size=10 | API tra cứu |
 
-## 2. Tài khoản demo
+Frontend dùng Vite và proxy /api tới backend. Bản frontend/dist được tạo trong bước build. Hướng dẫn chạy có thêm cách khởi động thủ công bằng hai terminal.
 
-Profile demo lấy mật khẩu từ `APP_DEMO_PASSWORD` do script truyền vào riêng tiến trình. JUnit dùng fixture riêng trong tài
-nguyên test, không phải thông tin đăng nhập triển khai.
+## Tài khoản và quyền
 
-| Tài khoản | Vai trò | Quyền |
-|---|---|---|
-| *(không đăng nhập)* | GUEST | Tra cứu, xem gợi ý, xem tour công khai |
-| `khach01` | CUSTOMER | Giống GUEST |
-| `product01` | PRODUCT | Gắn sở thích cho Tour, quản lý danh mục sở thích |
-| `manager01` | MANAGER | Chỉ xem sở thích của phiên bản Tour |
-| `admin01` | ADMIN | Không có quyền nội bộ Module A; không có màn hình quản trị tài khoản |
+| Tài khoản | Vai trò | Quyền trong Module A |
+| --- | --- | --- |
+| Khách vãng lai | GUEST | Tra cứu, gợi ý, danh mục công khai và chi tiết |
+| khach01 | CUSTOMER | Chức năng công khai |
+| product01 | PRODUCT | Đọc/sửa tag DRAFT, đọc/tạo/cập nhật danh mục sở thích |
+| manager01 | MANAGER | Đọc tag của phiên bản |
+| admin01 | ADMIN | Minh họa kiểm tra quyền truy cập nội bộ |
 
----
+Bốn tài khoản dùng mật khẩu đã đặt cho lần chạy. DataInitializer tạo tài khoản khi profile demo hoặc test được bật và có APP_DEMO_PASSWORD. Profile mặc định phục vụ API công khai, còn tài khoản mẫu cần profile tương ứng.
 
-## 3. Danh sách API
+APP_JWT_SECRET dùng cho khóa JWT cố định. Nếu biến này trống, mỗi JVM sinh khóa mới. Khi khởi động lại bản demo mặc định, cần đăng nhập lại.
 
-### API công khai (mở cho cả người dùng chưa đăng nhập)
+## Kết quả mẫu
 
-| # | Method | Endpoint | Công dụng |
-|---|---|---|---|
-| 1 | GET | `/api/v1/interests` | Danh mục sở thích đang hoạt động cho bộ lọc |
-| 2 | GET | `/api/v1/destinations` | Danh mục điểm đến (tùy chọn `?type=CITY`) |
-| 3 | GET | `/api/v1/tours` | Tìm kiếm và lọc danh sách tour |
-| 4 | GET | `/api/v1/tour-recommendations` | Gợi ý và xếp hạng tour theo sở thích |
-| 5 | GET | `/api/v1/tours/{tourId}` | Chi tiết một tour công khai |
+Seed có 14 Tour, trong đó 12 Tour công khai. Với size=10, danh sách mặc định có hai trang. Trên dữ liệu mới khởi tạo, chọn DN, 3 ngày, ngân sách tối đa 5000000, sở thích BEACH và CULTURE:
 
-Tham số của API 3 và API 4 giống nhau: `keyword`, `destinationId`, `durationDays`,
-`maxBudget`, `interestCodes` (lặp lại nhiều lần), `availableOnly`, `page`, `size`.
-Tên tham số khác, gồm `minBudget` và `sort`, trả 400 `INVALID_FILTER`.
-`keyword` được trim/NFC, không phân biệt hoa thường, phân biệt dấu; `%`, `_`
-được tìm như ký tự thật. Điểm đến lạ/inactive trả 422 `INVALID_DESTINATION`.
-Giới hạn: keyword 100 ký tự, tối đa 10 mã sở thích duy nhất, page từ 1, size 1–10.
+| Thứ tự | Tour | Điểm | Giá từ (đồng) |
+| --- | --- | --- | --- |
+| 1 | 112 — Đà Nẵng - Hội An trọn gói | 100% | 4.900.000 |
+| 2 | 113 — Đà Nẵng biển và văn hóa | 100% | 5.000.000 |
+| 3 | 101 — Đà Nẵng biển và ẩm thực | 50% | 4.200.000 |
 
-### API nội bộ (bắt buộc JWT)
+Tour 105 có nội dung PENDING và Tour 114 đã ARCHIVED, API chi tiết công khai trả 404. Phiên bản 201 là PUBLISHED của Tour 101; phiên bản 215 là DRAFT cho bài thực hành gắn tag.
 
-| # | Method | Endpoint | Vai trò |
-|---|---|---|---|
-| 6 | GET | `/api/v1/internal/tour-versions/{versionId}/interests` | PRODUCT, MANAGER |
-| 7 | PUT | `/api/v1/internal/tour-versions/{versionId}/interests` | PRODUCT |
-| 8 | POST | `/api/v1/internal/interests` | PRODUCT |
-| 9 | PATCH | `/api/v1/internal/interests/{interestId}` | PRODUCT |
+## Quy tắc tìm kiếm và xếp hạng
 
-`GET /api/v1/internal/interests` chỉ dành cho PRODUCT, trả danh mục quản trị
-gồm cả mục đã tắt. MANAGER chỉ xem tag của một phiên bản qua API 6.
+1. Chuẩn hóa và kiểm tra đầu vào.
+2. Chọn Tour ACTIVE, đúng phiên bản PUBLISHED hiện tại, chuyến OPEN trong cửa sổ nhận đặt và active offer APPROVED.
+3. Lọc chỗ khi availableOnly=true, rồi áp từ khóa, điểm đến, số ngày và ngân sách.
+4. Chọn giá thấp nhất đủ điều kiện cho từng Tour.
+5. Tính round(100 × số sở thích trùng / số sở thích chọn, 2) bằng tag active của bản PUBLISHED.
+6. Sắp toàn bộ kết quả theo điểm giảm, giá tăng, mã Tour số tăng, sau đó phân trang.
 
-Phụ trợ: `POST /api/v1/auth/login` để lấy token, `GET /api/v1/auth/me` để xem
-thông tin phiên đăng nhập.
+Khi để trống sở thích, matchScore=null, personalized=false và thứ tự theo giá/mã Tour. Tour có điểm 0 vẫn xuất hiện nếu qua các bộ lọc. Điểm biểu thị tỷ lệ trùng sở thích đã chọn.
 
----
+## API chính
 
-## 4. Thuật toán gợi ý
+Tiền tố chung /api/v1. ID bigint và tiền VND nguyên trong DTO được trả dạng chuỗi.
 
-Thứ tự xử lý đúng theo mục 5 của đặc tả:
+| Method | Đường dẫn | Quyền |
+| --- | --- | --- |
+| GET | /destinations, /interests, /tours, /tour-recommendations, /tours/{tourId} | Công khai |
+| POST | /auth/login | Thông tin đăng nhập hợp lệ |
+| GET | /auth/me | JWT hợp lệ |
+| GET | /internal/tour-versions/{versionId}/interests | PRODUCT, MANAGER |
+| PUT | /internal/tour-versions/{versionId}/interests | PRODUCT, bản DRAFT |
+| GET/POST | /internal/interests | PRODUCT |
+| PATCH | /internal/interests/{interestId} | PRODUCT |
 
-1. **Trim → validate → normalize** `interestCodes` — `SearchParamValidator`
-2. **Chọn ứng viên**: Tour `ACTIVE`, phiên bản là `current_published_version_id`
-   và có `content_status = PUBLISHED`, chuyến khởi hành `OPEN` nằm trong cửa sổ
-   đặt tại `asOf`, bản giá đang active có `approval_status = APPROVED`, và còn chỗ
-   nếu `availableOnly = true`
-3. **Áp hard filters** theo `keyword`, `destinationId`, `durationDays`, `maxBudget`
-4. **Lấy chuyến khởi hành rẻ nhất đủ điều kiện** của từng Tour — `TourSearchDao`
-5. **Join tags**, chỉ tính các sở thích đang `is_active = true`
-6. **Chấm điểm** — `InterestScorer`
-7. **Sắp xếp** `matchScore DESC NULLS LAST, priceFrom ASC, tourId ASC`
-8. **Phân trang**
+Tra cứu nhận keyword, destinationId, durationDays, maxBudget, interestCodes lặp lại, availableOnly, page và size. Tên ngoài hợp đồng, gồm minBudget/sort, trả 400. Ngân sách là số nguyên dương, page từ 1 và size 1–10. Điểm đến lạ hoặc sở thích ngừng hiệu lực trả 422. Chi tiết nằm trong hợp đồng API.
 
-### Hàm chấm điểm
+## Kiểm thử
 
-Cho `S` là tập mã sở thích hợp lệ, không trùng nhau, do khách chọn; `T` là tập tag
-thuộc phiên bản đã công bố và đang active của một tour.
+Từ thư mục gốc, chạy kiểm tra backend:
 
-```
-matched      = S ∩ T
-matchedCount = |matched|
+~~~powershell
+Push-Location backend
+try {
+    mvn clean verify
+    if ($LASTEXITCODE -ne 0) { throw 'Backend verification failed.' }
+} finally { Pop-Location }
+~~~
 
-|S| > 0  →  matchScore = round(100 × matchedCount / |S|, 2)     (0–100)
-|S| = 0  →  matchScore = null,  sắp theo giá tăng rồi tourId tăng
-```
+Kiểm tra frontend:
 
-`matchScore` là **tỷ lệ trùng sở thích**. Đây không phải xác suất và cũng không
-phải tỷ lệ hài lòng dự báo. Khi khách không chọn sở thích nào, hệ thống không
-tuyên bố "gợi ý cá nhân hóa".
+~~~powershell
+Push-Location frontend
+try {
+    npm ci
+    if ($LASTEXITCODE -ne 0) { throw 'npm ci failed.' }
+    npm run build
+    if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed.' }
+} finally { Pop-Location }
+~~~
 
-Tour có `matched = 0` **vẫn được giữ** nếu đạt các hard filters.
+Browser test cần dịch vụ đang chạy, Chromium và mật khẩu demo trong môi trường tiến trình. Xem [hướng dẫn kiểm thử](HUONG_DAN_CHAY_VA_DEMO.md#6-kiểm-thử-và-lưu-kết-quả) để cấu hình URL, credential và nơi ghi minh chứng.
 
----
+JUnit ghi báo cáo ở backend/target/surefire-reports và các ca QA ghi thêm backend/target/module-a-evidence. Playwright ghi JSON, ảnh và trace theo MODULE_A_EVIDENCE_DIR. Mỗi lần chạy cần lưu mã commit, công cụ, cấu hình và kết quả thực tế. TC38 còn chờ ngưỡng hiệu năng/mức tải được xác nhận.
 
-## 5. Hai quy tắc nghiệp vụ dễ làm sai
+## Dừng và khôi phục seed
 
-**Chỉ dùng bản giá đã được phê duyệt.** Chuyến 301 có bản giá v1 đã duyệt
-4.200.000 ₫ và bản v2 đang chờ duyệt 3.000.000 ₫. Khi khách tìm tour, hệ thống
-vẫn phải dùng 4.200.000 ₫.
+~~~powershell
+& .\scripts\demo\Stop-Demo.ps1 -RuntimeRoot $demoRuntime
+& .\scripts\demo\Start-Demo.ps1 -RuntimeRoot $demoRuntime -CredentialPath $demoCredential -SkipBuild
+~~~
 
-**Loại chuyến hết chỗ trước khi tìm giá thấp nhất.** Tour 110 có chuyến
-3.900.000 ₫ đã hết chỗ và chuyến 4.400.000 ₫ còn chỗ. Với `availableOnly = true`,
-giá đại diện là 4.400.000 ₫ — không được quảng cáo mức giá của chuyến không còn
-đủ điều kiện bán.
+H2 trong bộ nhớ được dựng lại khi backend khởi động. Tag DRAFT 215 trở lại BEACH,FOOD và mục sở thích tạo thêm trong buổi thực hành được xóa theo vòng đời database.
 
----
+-SkipBuild dùng bản build đã lưu trong runtime. Sau khi sửa mã hoặc mới clone lần đầu, chạy lại với bước build đầy đủ.
 
-## 6. Dữ liệu mẫu
+## Cấu trúc nguồn
 
-`data.sql` dựng lại các ví dụ trong đặc tả để kiểm chứng từng nhánh của thuật toán:
+~~~text
+backend/src/main/java/       Controller, service, repository, security và entity
+backend/src/main/resources/  schema.sql, data.sql và các profile
+backend/src/test/            Unit, integration và QA tests
+frontend/src/               Giao diện React và API client
+frontend/public/images/     Ảnh công khai và attribution
+frontend/tests/             Kiểm thử Playwright
+demo-assets/                Ảnh seed nội bộ và manifest ảnh
+scripts/demo/               Tạo credential, chạy/dừng và xác minh restart
+docs/demo/                  Danh mục dữ liệu và kết quả đối chứng
+docs/qa/                    Hợp đồng API và quyết định kiểm thử
+~~~
 
-| Tour | Tình huống minh họa |
-|---|---|
-| 101 | Ba chuyến giá 4,2 / 4,6 / 5,2 triệu; chuyến 301 có bản giá v2 chờ duyệt |
-| 112, 113 | Cùng trùng 2/2 sở thích → cùng 100,0 điểm, phân định bằng giá |
-| 102 | Bị loại vì vượt ngân sách (6,0 triệu) |
-| 103 | Bị loại vì sai điểm đến (Đà Lạt) |
-| 104 | Bị loại vì sai thời lượng (4 ngày) |
-| 105 | Bị loại vì nội dung còn `PENDING`, chưa công bố |
-| 110 | Chuyến rẻ nhất đã hết chỗ → minh họa `availableOnly` |
-| 114 | Tour `ARCHIVED`, không xuất hiện trong kết quả công khai |
-| v215 | Bản nháp `DRAFT` của tour 101 — phiên bản duy nhất sửa được sở thích |
-| FESTIVAL | Sở thích `is_active = false`, không được tính điểm |
-
----
-
-## 7. Bảng mã lỗi
-
-Mọi phản hồi dùng chung một bao bì: `{ "success", "data", "meta", "error" }`.
-Thân lỗi mang `code`, `message`, `details`, `requestId`, `timestamp`.
-
-| HTTP | Code | Trường hợp |
-|---|---|---|
-| 400 | `INVALID_FILTER` / `INVALID_BUDGET` / `INVALID_PAGINATION` | Tham số không hợp lệ |
-| 401 | `UNAUTHENTICATED` | Thiếu hoặc sai token ở API nội bộ |
-| 403 | `FORBIDDEN` | Không đủ quyền |
-| 404 | `TOUR_NOT_FOUND` / `VERSION_NOT_FOUND` / `INTEREST_NOT_FOUND` | Đối tượng không tồn tại hoặc không được public |
-| 409 | `VERSION_LOCKED` / `TAG_UPDATE_CONFLICT` | Sửa phiên bản không phải `DRAFT`, xung đột cập nhật |
-| 422 | `INVALID_INTEREST_CODE` / `DUPLICATE_INTEREST_CODE` | Sở thích không tồn tại / không active, hoặc body trùng mã |
-| 422 | `INVALID_DESTINATION` | Điểm đến không tồn tại hoặc không active |
-| 429 | `RATE_LIMITED` | Khi có cấu hình rate limit |
-| 500 | `INTERNAL_ERROR` | Lỗi không mong đợi, log server kèm `requestId` |
-
----
-
-## 8. Cấu trúc thư mục
-
-```
-backend/
-  src/main/java/vn/ptit/tour/
-    controller/   4 controller: catalog, tra cứu/gợi ý, nội bộ, đăng nhập
-    service/      SearchParamValidator, InterestScorer, TourSearchService,
-                  TourDetailService, CatalogService, InterestAdminService
-    repository/   JPA repositories + TourSearchDao (SQL hard filter)
-    entity/       10 bảng theo đặc tả + app_users
-    dto/          request/response records
-    security/     JwtService, JwtAuthenticationFilter
-    config/       SecurityConfig (ma trận quyền), DataInitializer
-    exception/    ErrorCode, ApiException, GlobalExceptionHandler
-  src/main/resources/
-    schema.sql    DDL đúng kiểu dữ liệu đặc tả
-    data.sql      dữ liệu mẫu dựng lại các ví dụ
-  src/test/java/  unit test hàm chấm điểm + integration test 9 API
-
-frontend/
-  src/
-    api/client.js      lớp gọi API duy nhất, quản lý JWT
-    pages/             SearchPage, TourDetailPage, AdminPage
-    components/        TopBar, FilterPanel, TourCard, Notice, ErrorNotice
-    styles/app.css
-```
-
-## 9. Kiểm thử giao diện và PostgreSQL
-
-Node.js >=20. Chạy `npm ci`, `npm run build`, `npm run test:browser` trong
-`frontend` khi hệ thống đang hoạt động; bản demo dùng18080/15173 theo hướng dẫn chạy. Cài Chromium tương ứng
-với Playwright1.58.2 (`npx playwright install chromium`) nếu máy chưa có.
-`MODULE_A_BASE_URL`, `MODULE_A_ADMIN_API_URL` và `MODULE_A_EVIDENCE_DIR` chọn URL/nơi lưu minh chứng.
-Các ca admin nhận mật khẩu demo qua `MODULE_A_DEMO_PASSWORD` trong môi trường tiến trình; hướng dẫn chạy giải mã credential DPAPI rồi dọn biến sau test;
-không ghi credential vào source, trace hoặc báo cáo.
-
-Profile PostgreSQL, biến DB và khởi tạo trên DB trống: [hướng dẫn PostgreSQL](CHUYEN_SANG_POSTGRESQL.md).
-Hợp đồng đầy đủ: [API Module A](docs/qa/API_CONTRACT_Module_A.md),
-[các quyết định](docs/qa/module-a-contract-decisions.md).
-
-`mvn -Dtest=ModuleAPerformanceIT test` là bộ đo riêng, dùng DB QA tách biệt và
-cấu hình trong Test_Scripts/run-module-a-performance.ps1 của hồ sơ QA.
-Số đo p95 không tự xác nhận SLA khi chưa có ngưỡng được chốt.
+Khi đưa lên Git, chọn mã nguồn, SQL seed, tài liệu và tài nguyên theo .gitignore. Credential, biến bí mật và dữ liệu runtime được lưu ở vị trí riêng hoặc thư mục đã loại trừ.
