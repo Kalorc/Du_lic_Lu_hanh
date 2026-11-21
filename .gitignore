@@ -10,7 +10,7 @@ frontend/playwright-report/
 *.h2.db
 *.mv.db
 .superpowers/
-docs/
-demo-assets/
-scripts/
-qa/
+# Local credentials and generated evidence
+*.clixml
+*.trace.db
+/docs/superpowers/

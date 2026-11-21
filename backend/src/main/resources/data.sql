@@ -19,7 +19,7 @@ INSERT INTO destinations (destination_id, name, slug, destination_type, parent_d
  ('SAPA','Sa Pa','sa-pa','CITY','MIENBAC','Lào Cai','Miền Bắc','VN',22.336215,103.843895,TRUE),
  ('BANAHILLS','Bà Nà Hills','ba-na-hills','ATTRACTION','DN','Đà Nẵng','Miền Trung','VN',15.995278,107.988333,TRUE);
 
--- ------------------------- DANH MUC SO THICH (10 muc theo dac ta) -------------------------
+-- ------------------------- SO THICH: 10 ACTIVE + FESTIVAL INACTIVE -------------------------
 INSERT INTO tour_interests (interest_id, code, name, description, is_active, display_order) VALUES
  (1,'BEACH','Biển','Tour biển, đảo',TRUE,1),
  (2,'MOUNTAIN','Núi','Núi, cao nguyên',TRUE,2),
