@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -50,6 +51,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return build(ErrorCode.INVALID_FILTER,
                 "Tham so '" + ex.getName() + "' co kieu du lieu khong hop le", null);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        return build(ErrorCode.INVALID_FILTER, "JSON dau vao khong hop le", null);
     }
 
     @ExceptionHandler(AuthenticationException.class)

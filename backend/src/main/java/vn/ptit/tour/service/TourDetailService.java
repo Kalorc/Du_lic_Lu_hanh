@@ -10,6 +10,7 @@ import vn.ptit.tour.exception.ErrorCode;
 import vn.ptit.tour.repository.*;
 
 import java.time.OffsetDateTime;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public class TourDetailService {
     private final DepartureOfferVersionRepository offerRepository;
     private final TourSearchDao searchDao;
     private final ObjectMapper objectMapper;
+    private final Clock clock;
 
     public TourDetailService(TourRepository tourRepository,
                              TourVersionRepository versionRepository,
@@ -36,7 +38,8 @@ public class TourDetailService {
                              TourDepartureRepository departureRepository,
                              DepartureOfferVersionRepository offerRepository,
                              TourSearchDao searchDao,
-                             ObjectMapper objectMapper) {
+                             ObjectMapper objectMapper,
+                             Clock clock) {
         this.tourRepository = tourRepository;
         this.versionRepository = versionRepository;
         this.versionDestinationRepository = versionDestinationRepository;
@@ -46,6 +49,7 @@ public class TourDetailService {
         this.offerRepository = offerRepository;
         this.searchDao = searchDao;
         this.objectMapper = objectMapper;
+        this.clock = clock;
     }
 
     @Transactional(readOnly = true)
@@ -61,7 +65,7 @@ public class TourDetailService {
         TourVersion version = versionRepository.findById(tour.getCurrentPublishedVersionId())
                 .orElseThrow(() -> new ApiException(ErrorCode.VERSION_NOT_FOUND));
 
-        if (version.getContentStatus() != ContentStatus.PUBLISHED) {
+        if (version.getContentStatus() != ContentStatus.PUBLISHED || !tourId.equals(version.getTourId())) {
             throw new ApiException(ErrorCode.TOUR_NOT_FOUND);
         }
 
@@ -87,17 +91,18 @@ public class TourDetailService {
                 .findFirst().orElse(null);
 
         // Gia "tu": chuyen khoi hanh re nhat dang du dieu kien ban
+        OffsetDateTime now = OffsetDateTime.now(clock);
         Optional<CandidateRow> cheapest = searchDao
-                .findCandidateForTour(tourId, true, OffsetDateTime.now()).stream().findFirst();
+                .findCandidateForTour(tourId, true, now).stream().findFirst();
         String priceFrom = cheapest.map(c -> c.priceFrom().toPlainString()).orElse(null);
         String currency = cheapest.map(CandidateRow::currency).orElse("VND");
 
-        OffsetDateTime now = OffsetDateTime.now();
         List<DepartureDto> departures = new ArrayList<>();
         for (TourDeparture d : departureRepository.findByTourAndVersion(tourId, version.getTourVersionId())) {
             DepartureOfferVersion offer = d.getActiveOfferId() == null ? null
                     : offerRepository.findById(d.getActiveOfferId()).orElse(null);
-            boolean approvedPrice = offer != null && "APPROVED".equals(offer.getApprovalStatus());
+            boolean approvedPrice = offer != null && d.getDepartureId().equals(offer.getDepartureId())
+                    && "APPROVED".equals(offer.getApprovalStatus());
             boolean bookable = "OPEN".equals(d.getSalesStatus())
                     && approvedPrice
                     && !now.isBefore(d.getBookingOpensAt())

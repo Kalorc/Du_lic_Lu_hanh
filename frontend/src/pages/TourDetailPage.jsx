@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, formatDate, formatVnd } from '../api/client.js';
 import ErrorNotice from '../components/ErrorNotice.jsx';
+import Icon from '../components/Icon.jsx';
+import TourImage from '../components/TourImage.jsx';
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -25,8 +27,9 @@ export default function TourDetailPage() {
 
   if (loading) {
     return (
-      <main className="page">
-        <div className="skeleton" style={{ height: 260 }} />
+      <main className="page" aria-busy="true">
+        <p role="status" className="sr-only">Đang tải thông tin tour…</p>
+        <div className="skeleton detail-skeleton" aria-hidden="true" />
       </main>
     );
   }
@@ -34,10 +37,8 @@ export default function TourDetailPage() {
   if (error) {
     return (
       <main className="page">
+        <Link className="back-link" to="/tours"><Icon name="back" /> Về trang tra cứu</Link>
         <ErrorNotice error={error} />
-        <p style={{ marginTop: 14 }}>
-          <Link to="/tours">← Về trang tra cứu</Link>
-        </p>
       </main>
     );
   }
@@ -45,78 +46,122 @@ export default function TourDetailPage() {
   const itinerary = asArray(tour.itinerary);
   const included = asArray(tour.includedServices);
   const excluded = asArray(tour.excludedServices);
+  const photos = asArray(tour.media).filter((item) => item.mediaType === 'IMAGE');
+  const cover = photos.find((item) => item.mediaUrl === tour.coverImageUrl);
+  const gallery = photos.filter((item) => !item.cover && item.mediaUrl !== tour.coverImageUrl);
 
   return (
-    <main className="page">
-      <p style={{ marginTop: 0 }}>
-        <Link to="/tours">← Về trang tra cứu</Link>
-      </p>
+    <main className="page detail-page">
+      <Link className="back-link" to="/tours"><Icon name="back" /> Về trang tra cứu</Link>
 
       <div className="page-head">
         <h1>{tour.title}</h1>
-        <p>
-          {tour.tourCode} · {tour.durationDays} ngày {tour.nights} đêm ·{' '}
-          {tour.destinations.map((d) => d.name).join(' · ')}
-        </p>
+        <div className="tour-meta detail-meta">
+          {tour.destinations.length > 0 && (
+            <span><Icon name="pin" /> {tour.destinations.map((d) => d.name).join(' · ')}</span>
+          )}
+          <span><Icon name="clock" /> {tour.durationDays} ngày {tour.nights} đêm</span>
+          <span className="pill closed">{tour.tourCode}</span>
+        </div>
       </div>
 
-      <div className="detail-hero">
-        {tour.coverImageUrl && <img src={tour.coverImageUrl} alt={tour.title} />}
-      </div>
-
-      <div className="detail-grid">
+      <div className="detail-overview">
         <div>
-          {tour.summary && (
-            <section className="section">
-              <h2>Giới thiệu</h2>
-              <p style={{ margin: 0 }}>{tour.summary}</p>
-              {tour.description && <p>{tour.description}</p>}
-            </section>
-          )}
+          <TourImage
+            className="detail-hero"
+            src={tour.coverImageUrl}
+            alt={cover?.altText?.trim() || tour.title}
+            loading="eager"
+          />
+          {cover?.caption && <p className="photo-caption">{cover.caption}</p>}
+        </div>
 
-          {itinerary.length > 0 && (
-            <section className="section">
-              <h2>Lịch trình</h2>
-              <ul className="itinerary">
-                {itinerary.map((d, idx) => (
-                  <li key={idx}>
-                    <div className="day">Ngày {d.day ?? idx + 1}</div>
-                    <div>{d.title ?? JSON.stringify(d)}</div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+        <aside className="card card-pad detail-facts" aria-label="Giá và sở thích của tour">
+          <div className="price-from">Giá từ</div>
+          <div className="price">{formatVnd(tour.priceFrom)}</div>
+          <div className="price-basis">
+            {tour.priceFrom ? 'Mỗi khách người lớn · chuyến rẻ nhất còn chỗ' : 'Chưa có giá cho chuyến còn chỗ'}
+          </div>
+          <a className="btn" href="#khoi-hanh">Xem lịch khởi hành <Icon name="down" /></a>
 
-          {(included.length > 0 || excluded.length > 0) && (
-            <section className="section">
-              <h2>Dịch vụ</h2>
-              {included.length > 0 && (
-                <>
-                  <strong>Bao gồm</strong>
-                  <ul className="bullets">
-                    {included.map((s, i) => (
-                      <li key={i}>{String(s)}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {excluded.length > 0 && (
-                <>
-                  <strong>Không bao gồm</strong>
-                  <ul className="bullets">
-                    {excluded.map((s, i) => (
-                      <li key={i}>{String(s)}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </section>
-          )}
+          <div className="detail-tags">
+            <h2>Sở thích của tour</h2>
+            <div className="tag-row">
+              {tour.interests.map((i) => <span key={i.code} className="tag">{i.name}</span>)}
+              {tour.interests.length === 0 && <span className="hint">Chưa gắn sở thích</span>}
+            </div>
+          </div>
+        </aside>
+      </div>
 
-          <section className="section">
-            <h2>Chuyến khởi hành</h2>
-            <div className="card">
+      {gallery.length > 0 && (
+        <section className="section" aria-labelledby="gallery-title">
+          <h2 id="gallery-title">Hình ảnh hành trình</h2>
+          <div className="gallery">
+            {gallery.map((item, index) => (
+              <figure key={item.mediaId}>
+                <TourImage
+                  className="gallery-image"
+                  src={item.mediaUrl}
+                  alt={item.altText?.trim() || `Ảnh ${index + 1} của ${tour.title}`}
+                />
+                {item.caption && <figcaption className="photo-caption">{item.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(tour.summary || tour.description) && (
+        <section className="section detail-copy">
+          <h2>Giới thiệu</h2>
+          {tour.summary && <p className="detail-summary">{tour.summary}</p>}
+          {tour.description && <p>{tour.description}</p>}
+        </section>
+      )}
+
+      {itinerary.length > 0 && (
+        <section className="section">
+          <h2>Lịch trình</h2>
+          <ul className="itinerary">
+            {itinerary.map((d, idx) => (
+              <li key={idx}>
+                <div className="day">Ngày {d.day ?? idx + 1}</div>
+                <div>{d.title ?? JSON.stringify(d)}</div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(included.length > 0 || excluded.length > 0) && (
+        <section className="section">
+          <h2>Dịch vụ</h2>
+          <div className="service-grid">
+            {included.length > 0 && (
+              <div className="card card-pad">
+                <h3>Bao gồm</h3>
+                <ul className="bullets">
+                  {included.map((s, i) => <li key={i}>{String(s)}</li>)}
+                </ul>
+              </div>
+            )}
+            {excluded.length > 0 && (
+              <div className="card card-pad">
+                <h3>Không bao gồm</h3>
+                <ul className="bullets">
+                  {excluded.map((s, i) => <li key={i}>{String(s)}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section className="section" id="khoi-hanh" aria-labelledby="departures-title">
+        <h2 id="departures-title">Chuyến khởi hành</h2>
+        {tour.departures.length > 0 ? (
+            <div className="card table-scroll" tabIndex={0} role="region" aria-label="Lịch và giá khởi hành">
               <table>
                 <thead>
                   <tr>
@@ -144,55 +189,8 @@ export default function TourDetailPage() {
                 </tbody>
               </table>
             </div>
-            <p className="hint" style={{ fontSize: 12, color: 'var(--muted)' }}>
-              Chuyến chỉ bán được khi đang mở bán, nằm trong cửa sổ đặt, có bản giá đã duyệt
-              và còn chỗ. Giá của bản giá chưa duyệt không được dùng.
-            </p>
-          </section>
-        </div>
-
-        <aside>
-          <div className="card card-pad" style={{ marginBottom: 16 }}>
-            <div className="price-from">Giá từ</div>
-            <div className="price" style={{ fontSize: 24 }}>
-              {formatVnd(tour.priceFrom)}
-            </div>
-            <div className="price-basis">
-              {tour.currency} · người lớn / khách · chuyến rẻ nhất còn chỗ
-            </div>
-          </div>
-
-          <div className="card card-pad" style={{ marginBottom: 16 }}>
-            <h2 style={{ fontSize: 15, marginTop: 0 }}>Sở thích của tour</h2>
-            <div className="tag-row">
-              {tour.interests.map((i) => (
-                <span key={i.code} className="tag">
-                  {i.name}
-                </span>
-              ))}
-              {tour.interests.length === 0 && (
-                <span style={{ color: 'var(--muted)', fontSize: 13 }}>Chưa gắn sở thích</span>
-              )}
-            </div>
-          </div>
-
-          <div className="card card-pad">
-            <h2 style={{ fontSize: 15, marginTop: 0 }}>Thông tin kỹ thuật</h2>
-            <dl className="kv">
-              <dt>tourId</dt>
-              <dd>{tour.tourId}</dd>
-              <dt>tourVersionId</dt>
-              <dd>{tour.tourVersionId}</dd>
-              <dt>slug</dt>
-              <dd>{tour.slug}</dd>
-              <dt>Điểm khởi hành</dt>
-              <dd>{tour.originDestinationId ?? '—'}</dd>
-              <dt>priceBasis</dt>
-              <dd>{tour.priceBasis}</dd>
-            </dl>
-          </div>
-        </aside>
-      </div>
+        ) : <p className="hint">Chưa có chuyến khởi hành.</p>}
+      </section>
     </main>
   );
 }

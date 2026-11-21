@@ -13,48 +13,35 @@ Tầng giao diện (React) → Auth(JWT) → Controller → Service → Reposito
 |---|---|
 | Backend | Java 21, Spring Boot 3.3.5, Spring Data JPA, Spring Security + JWT (jjwt) |
 | CSDL | H2 in-memory, `MODE=PostgreSQL`, nạp sẵn `schema.sql` + `data.sql` |
-| Frontend | React 18 + Vite 5, React Router 6 |
+| Frontend | React 18 + Vite 6.4.6, React Router 7.18.5 |
 
 ---
 
-## 1. Chạy thử
+## 1. Chạy và trình bày demo
 
-### Backend
+Xem [hướng dẫn chạy đã kiểm chứng](HUONG_DAN_CHAY_VA_DEMO.md) và [kịch bản6 phút30 giây](KICH_BAN_DEMO_TRUOC_GIANG_VIEN.md).
 
-```bash
-cd backend
-mvn spring-boot:run
+Trong PowerShell tại repository:
+
+```powershell
+$demoRuntime = 'E:\2.PTIT\QLDA\module-a-demo-runtime-20261121\local-demo'
+$demoCredential = Join-Path $demoRuntime 'credential.clixml'
+& '.\scripts\demo\Set-DemoPassword.ps1' -CredentialPath $demoCredential
+& '.\scripts\demo\Start-Demo.ps1' -RuntimeRoot $demoRuntime -CredentialPath $demoCredential
 ```
 
-Server chạy tại `http://localhost:8080`. CSDL H2 được tạo lại mỗi lần khởi động
-và nạp sẵn dữ liệu mẫu, không cần cài đặt gì thêm.
+Nhập mật khẩu riêng tối thiểu12 ký tự ở lời nhắc ẩn; credential DPAPI nằm ngoài Git. Script tạo bản sao sạch, chạy `mvn clean verify`, `npm ci`, `npm run build`, khởi tạo H2 memory rồi mở backend18080/frontend15173 trên loopback. Website: http://127.0.0.1:15173/tours; đăng nhập: http://127.0.0.1:15173/admin. Không dừng các dịch vụ sẵn có ở8080/5173. Xem hướng dẫn đầy đủ để chạy test, dừng/reset và khởi động lại bằng `-SkipBuild`.
 
-Xem CSDL bằng H2 Console: `http://localhost:8080/h2-console`
-(JDBC URL `jdbc:h2:mem:tourdb`, user `sa`, mật khẩu để trống).
+Ảnh Tour có nguồn/tác giả/giấy phép tại [attribution](frontend/public/images/credits.html); toàn bộ ảnh được phục vụ local. CSDL H2 demo tạo lại từ schema/data mỗi lần khởi động; các thay đổi tag demo không được lưu lâu dài. Profile demo tắt H2 Console.
 
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Giao diện chạy tại `http://localhost:5173`. Vite đã cấu hình proxy `/api` sang
-cổng 8080 nên không gặp vấn đề CORS khi phát triển.
-
-### Chạy kiểm thử
-
-```bash
-cd backend
-mvn test
-```
+Phát triển thủ công vẫn dùng cấu hình mặc định backend8080 và Vite5173 nếu cổng trống. **Tài khoản mẫu chỉ được tạo ở profile demo/test và khi có APP_DEMO_PASSWORD**; đặt mật khẩu ở profile mặc định/production không bật seed. Khóa JWT ngẫu nhiên theo JVM nếu không cấp APP_JWT_SECRET. Không ghi password, token hoặc secret vào Git/log.
 
 ---
 
 ## 2. Tài khoản demo
 
-Mật khẩu của cả bốn tài khoản là `123456`.
+Profile demo lấy mật khẩu từ `APP_DEMO_PASSWORD` do script truyền vào riêng tiến trình. JUnit dùng fixture riêng trong tài
+nguyên test, không phải thông tin đăng nhập triển khai.
 
 | Tài khoản | Vai trò | Quyền |
 |---|---|---|
@@ -62,7 +49,7 @@ Mật khẩu của cả bốn tài khoản là `123456`.
 | `khach01` | CUSTOMER | Giống GUEST |
 | `product01` | PRODUCT | Gắn sở thích cho Tour, quản lý danh mục sở thích |
 | `manager01` | MANAGER | Chỉ xem sở thích của phiên bản Tour |
-| `admin01` | ADMIN | Quản trị tài khoản; **không** mặc nhiên được sửa nội dung |
+| `admin01` | ADMIN | Không có quyền nội bộ Module A; không có màn hình quản trị tài khoản |
 
 ---
 
@@ -80,6 +67,10 @@ Mật khẩu của cả bốn tài khoản là `123456`.
 
 Tham số của API 3 và API 4 giống nhau: `keyword`, `destinationId`, `durationDays`,
 `maxBudget`, `interestCodes` (lặp lại nhiều lần), `availableOnly`, `page`, `size`.
+Tên tham số khác, gồm `minBudget` và `sort`, trả 400 `INVALID_FILTER`.
+`keyword` được trim/NFC, không phân biệt hoa thường, phân biệt dấu; `%`, `_`
+được tìm như ký tự thật. Điểm đến lạ/inactive trả 422 `INVALID_DESTINATION`.
+Giới hạn: keyword 100 ký tự, tối đa 10 mã sở thích duy nhất, page từ 1, size 1–10.
 
 ### API nội bộ (bắt buộc JWT)
 
@@ -89,6 +80,9 @@ Tham số của API 3 và API 4 giống nhau: `keyword`, `destinationId`, `durat
 | 7 | PUT | `/api/v1/internal/tour-versions/{versionId}/interests` | PRODUCT |
 | 8 | POST | `/api/v1/internal/interests` | PRODUCT |
 | 9 | PATCH | `/api/v1/internal/interests/{interestId}` | PRODUCT |
+
+`GET /api/v1/internal/interests` chỉ dành cho PRODUCT, trả danh mục quản trị
+gồm cả mục đã tắt. MANAGER chỉ xem tag của một phiên bản qua API 6.
 
 Phụ trợ: `POST /api/v1/auth/login` để lấy token, `GET /api/v1/auth/me` để xem
 thông tin phiên đăng nhập.
@@ -177,6 +171,7 @@ Thân lỗi mang `code`, `message`, `details`, `requestId`, `timestamp`.
 | 404 | `TOUR_NOT_FOUND` / `VERSION_NOT_FOUND` / `INTEREST_NOT_FOUND` | Đối tượng không tồn tại hoặc không được public |
 | 409 | `VERSION_LOCKED` / `TAG_UPDATE_CONFLICT` | Sửa phiên bản không phải `DRAFT`, xung đột cập nhật |
 | 422 | `INVALID_INTEREST_CODE` / `DUPLICATE_INTEREST_CODE` | Sở thích không tồn tại / không active, hoặc body trùng mã |
+| 422 | `INVALID_DESTINATION` | Điểm đến không tồn tại hoặc không active |
 | 429 | `RATE_LIMITED` | Khi có cấu hình rate limit |
 | 500 | `INTERNAL_ERROR` | Lỗi không mong đợi, log server kèm `requestId` |
 
@@ -208,3 +203,20 @@ frontend/
     components/        TopBar, FilterPanel, TourCard, Notice, ErrorNotice
     styles/app.css
 ```
+
+## 9. Kiểm thử giao diện và PostgreSQL
+
+Node.js >=20. Chạy `npm ci`, `npm run build`, `npm run test:browser` trong
+`frontend` khi hệ thống đang hoạt động; bản demo dùng18080/15173 theo hướng dẫn chạy. Cài Chromium tương ứng
+với Playwright1.58.2 (`npx playwright install chromium`) nếu máy chưa có.
+`MODULE_A_BASE_URL`, `MODULE_A_ADMIN_API_URL` và `MODULE_A_EVIDENCE_DIR` chọn URL/nơi lưu minh chứng.
+Các ca admin nhận mật khẩu demo qua `MODULE_A_DEMO_PASSWORD` trong môi trường tiến trình; hướng dẫn chạy giải mã credential DPAPI rồi dọn biến sau test;
+không ghi credential vào source, trace hoặc báo cáo.
+
+Profile PostgreSQL, biến DB và khởi tạo trên DB trống: [hướng dẫn PostgreSQL](CHUYEN_SANG_POSTGRESQL.md).
+Hợp đồng đầy đủ: [API Module A](docs/qa/API_CONTRACT_Module_A.md),
+[các quyết định](docs/qa/module-a-contract-decisions.md).
+
+`mvn -Dtest=ModuleAPerformanceIT test` là bộ đo riêng, dùng DB QA tách biệt và
+cấu hình trong Test_Scripts/run-module-a-performance.ps1 của hồ sơ QA.
+Số đo p95 không tự xác nhận SLA khi chưa có ngưỡng được chốt.

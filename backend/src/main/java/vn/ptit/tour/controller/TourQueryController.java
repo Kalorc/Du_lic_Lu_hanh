@@ -9,6 +9,9 @@ import vn.ptit.tour.service.TourSearchService;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import vn.ptit.tour.exception.ApiException;
+import vn.ptit.tour.exception.ErrorCode;
 
 /**
  * API 3: GET /api/v1/tours                 - tim kiem va loc danh sach tour.
@@ -22,6 +25,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 public class TourQueryController {
+
+    private static final Set<String> SEARCH_PARAMETERS = Set.of("keyword", "destinationId",
+            "durationDays", "maxBudget", "interestCodes", "availableOnly", "page", "size");
 
     private final TourSearchService searchService;
     private final TourDetailService detailService;
@@ -40,8 +46,10 @@ public class TourQueryController {
             @RequestParam(required = false) List<String> interestCodes,
             @RequestParam(required = false) Boolean availableOnly,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size,
+            @RequestParam Map<String, String> queryParameters) {
 
+        validateQueryNames(queryParameters);
         return respond(new TourSearchRequest(keyword, destinationId, durationDays, maxBudget,
                 interestCodes, availableOnly, page, size));
     }
@@ -55,8 +63,10 @@ public class TourQueryController {
             @RequestParam(required = false) List<String> interestCodes,
             @RequestParam(required = false) Boolean availableOnly,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size,
+            @RequestParam Map<String, String> queryParameters) {
 
+        validateQueryNames(queryParameters);
         return respond(new TourSearchRequest(keyword, destinationId, durationDays, maxBudget,
                 interestCodes, availableOnly, page, size));
     }
@@ -64,6 +74,13 @@ public class TourQueryController {
     @GetMapping("/tours/{tourId}")
     public ResponseEntity<ApiResponse<TourDetailDto>> tourDetail(@PathVariable Long tourId) {
         return ResponseEntity.ok(ApiResponse.ok(detailService.getPublicDetail(tourId)));
+    }
+
+    /** A-ADR-01: reject unsupported filters instead of silently changing their meaning. */
+    private void validateQueryNames(Map<String, String> parameters) {
+        if (parameters.keySet().stream().anyMatch(name -> !SEARCH_PARAMETERS.contains(name))) {
+            throw new ApiException(ErrorCode.INVALID_FILTER, "Tham so loc khong duoc ho tro");
+        }
     }
 
     private ResponseEntity<ApiResponse<PageResult<TourSearchItem>>> respond(TourSearchRequest request) {

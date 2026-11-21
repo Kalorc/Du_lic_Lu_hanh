@@ -1,0 +1,13 @@
+# Use a separately provisioned database. Initialization is opt-in for EMPTY QA/demo databases.
+spring:
+  datasource:
+    url: "${DB_URL:jdbc:postgresql://localhost:5432/tourdb}"
+    driver-class-name: org.postgresql.Driver
+    username: "${DB_USER:postgres}"
+    password: "${DB_PASSWORD:}"
+  sql:
+    init:
+      mode: "${DB_INIT_MODE:never}"
+  h2:
+    console:
+      enabled: false

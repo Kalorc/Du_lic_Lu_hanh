@@ -1,4 +1,5 @@
 import { SIZE_MAX, KEYWORD_MAX, INTEREST_MAX } from '../constants.js';
+import Icon from './Icon.jsx';
 
 /**
  * Bo loc tuong ung dau vao cua thuat toan (muc 5.1 dac ta):
@@ -25,14 +26,16 @@ export default function FilterPanel({
 
   return (
     <form
+      id="bo-loc"
       className="card card-pad panel"
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();
       }}
     >
-      <h2>Điều kiện tìm tour</h2>
+      <h2><Icon name="sliders" /> Điều kiện tìm tour</h2>
 
+      <div className="filter-fields">
       <div className="field">
         <label htmlFor="keyword">Từ khóa</label>
         <input
@@ -43,7 +46,6 @@ export default function FilterPanel({
           value={form.keyword}
           onChange={(e) => onChange({ keyword: e.target.value })}
         />
-        <div className="hint">Tối đa {KEYWORD_MAX} ký tự sau khi bỏ khoảng trắng đầu/cuối.</div>
       </div>
 
       <div className="field">
@@ -56,11 +58,10 @@ export default function FilterPanel({
           <option value="">Tất cả điểm đến</option>
           {destinations.map((d) => (
             <option key={d.destinationId} value={d.destinationId}>
-              {d.name} ({d.destinationId})
+              {d.name}
             </option>
           ))}
         </select>
-        <div className="hint">Lọc bằng mã chuẩn, không so khớp chuỗi tên.</div>
       </div>
 
       <div className="field">
@@ -81,35 +82,36 @@ export default function FilterPanel({
           id="maxBudget"
           type="number"
           min={1}
-          step={100000}
+          step={1}
           placeholder="Ví dụ: 5000000"
+          aria-describedby="budget-hint"
           value={form.maxBudget}
           onChange={(e) => onChange({ maxBudget: e.target.value })}
         />
-        <div className="hint">Áp cho giá người lớn của chuyến khởi hành.</div>
+        <div className="hint" id="budget-hint">Giá cho một khách người lớn.</div>
       </div>
 
-      <div className="field">
-        <label>
+      <fieldset className="field interest-field">
+        <legend>
           Sở thích ({form.interestCodes.length}/{INTEREST_MAX})
-        </label>
+        </legend>
         <div className="chips">
           {interests.map((i) => (
             <button
               key={i.code}
               type="button"
               className={`chip ${form.interestCodes.includes(i.code) ? 'on' : ''}`}
+              aria-pressed={form.interestCodes.includes(i.code)}
               onClick={() => toggleInterest(i.code)}
               title={i.description ?? i.name}
             >
+              <Icon name="check" />
               {i.name}
             </button>
           ))}
         </div>
-        <div className="hint">
-          Không chọn sở thích nào thì kết quả chỉ được sắp theo giá, không chấm điểm.
-        </div>
-      </div>
+        <div className="hint">Chọn sở thích để ưu tiên tour phù hợp.</div>
+      </fieldset>
 
       <div className="field">
         <label className="switch">
@@ -132,9 +134,11 @@ export default function FilterPanel({
           ))}
         </select>
       </div>
+      </div>
 
       <div className="btn-row">
         <button className="btn" type="submit" disabled={loading}>
+          <Icon name="search" />
           {loading ? 'Đang tìm…' : 'Tìm tour'}
         </button>
         <button className="btn btn-ghost" type="button" onClick={onReset}>

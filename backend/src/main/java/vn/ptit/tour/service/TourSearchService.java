@@ -7,6 +7,7 @@ import vn.ptit.tour.entity.TourMedia;
 import vn.ptit.tour.repository.*;
 
 import java.time.OffsetDateTime;
+import java.time.Clock;
 import java.util.*;
 
 /**
@@ -38,6 +39,7 @@ public class TourSearchService {
     private final TourVersionDestinationRepository versionDestinationRepository;
     private final SearchParamValidator validator;
     private final InterestScorer scorer;
+    private final Clock clock;
 
     public TourSearchService(TourSearchDao searchDao,
                              TourVersionInterestTagRepository tagRepository,
@@ -45,7 +47,8 @@ public class TourSearchService {
                              TourMediaRepository mediaRepository,
                              TourVersionDestinationRepository versionDestinationRepository,
                              SearchParamValidator validator,
-                             InterestScorer scorer) {
+                             InterestScorer scorer,
+                             Clock clock) {
         this.searchDao = searchDao;
         this.tagRepository = tagRepository;
         this.interestRepository = interestRepository;
@@ -53,6 +56,7 @@ public class TourSearchService {
         this.versionDestinationRepository = versionDestinationRepository;
         this.validator = validator;
         this.scorer = scorer;
+        this.clock = clock;
     }
 
     public record SearchOutcome(PageResult<TourSearchItem> page,
@@ -63,7 +67,7 @@ public class TourSearchService {
 
     @Transactional(readOnly = true)
     public SearchOutcome search(TourSearchRequest request) {
-        OffsetDateTime asOf = OffsetDateTime.now();
+        OffsetDateTime asOf = OffsetDateTime.now(clock);
         SearchParams p = validator.validate(request);
 
         // Buoc 2-4: hard filters + chuyen khoi hanh re nhat du dieu kien moi tour
@@ -100,12 +104,8 @@ public class TourSearchService {
 
         // Diem den cua tung phien ban (de hien thi tren the tour)
         Map<Long, List<String>> destByVersion = new HashMap<>();
-        for (Long versionId : versionIds) {
-            List<String> ids = new ArrayList<>();
-            for (Object[] row : versionDestinationRepository.findByVersionId(versionId)) {
-                ids.add((String) row[0]);
-            }
-            destByVersion.put(versionId, ids);
+        for (Object[] row : versionDestinationRepository.findByVersionIds(versionIds)) {
+            destByVersion.computeIfAbsent((Long) row[0], key -> new ArrayList<>()).add((String) row[1]);
         }
 
         // Buoc 6: cham diem
@@ -147,7 +147,7 @@ public class TourSearchService {
 
         // Buoc 8: phan trang
         long totalItems = items.size();
-        int from = Math.min((p.page() - 1) * p.size(), items.size());
+        int from = (int) Math.min(((long) p.page() - 1) * p.size(), items.size());
         int to = Math.min(from + p.size(), items.size());
         List<TourSearchItem> pageItems = items.subList(from, to);
 

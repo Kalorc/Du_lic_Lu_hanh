@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale;
+import java.text.Normalizer;
 
 /**
  * Buoc "trim input -> validate -> normalize interestCodes" cua thuat toan (muc 5.1).
@@ -39,7 +41,8 @@ public class SearchParamValidator {
     public SearchParams validate(TourSearchRequest req) {
 
         // --- keyword: trim, gioi han do dai
-        String keyword = req.keyword() == null ? null : req.keyword().trim();
+        String keyword = req.keyword() == null ? null
+                : Normalizer.normalize(req.keyword().trim(), Normalizer.Form.NFC);
         if (keyword != null && keyword.isEmpty()) {
             keyword = null;
         }
@@ -54,11 +57,11 @@ public class SearchParamValidator {
             destinationId = null;
         }
         if (destinationId != null) {
-            destinationId = destinationId.toUpperCase();
+            destinationId = destinationId.toUpperCase(Locale.ROOT);
             boolean ok = destinationRepository.findById(destinationId)
                     .map(d -> d.isActive()).orElse(false);
             if (!ok) {
-                throw new ApiException(ErrorCode.INVALID_FILTER,
+                throw new ApiException(ErrorCode.INVALID_DESTINATION,
                         "destinationId khong ton tai hoac khong duoc su dung: " + destinationId);
             }
         }
@@ -81,7 +84,7 @@ public class SearchParamValidator {
             Set<String> seen = new LinkedHashSet<>();
             for (String raw : req.interestCodes()) {
                 if (raw == null) continue;
-                String c = raw.trim().toUpperCase();
+                String c = raw.trim().toUpperCase(Locale.ROOT);
                 if (!c.isEmpty()) seen.add(c);
             }
             codes.addAll(seen);
@@ -92,7 +95,7 @@ public class SearchParamValidator {
         }
         if (!codes.isEmpty()) {
             Set<String> valid = new LinkedHashSet<>();
-            interestRepository.findActiveByCodes(codes).forEach(i -> valid.add(i.getCode().toUpperCase()));
+            interestRepository.findActiveByCodes(codes).forEach(i -> valid.add(i.getCode().toUpperCase(Locale.ROOT)));
             List<String> unknown = codes.stream().filter(c -> !valid.contains(c)).toList();
             if (!unknown.isEmpty()) {
                 throw new ApiException(ErrorCode.INVALID_INTEREST_CODE,

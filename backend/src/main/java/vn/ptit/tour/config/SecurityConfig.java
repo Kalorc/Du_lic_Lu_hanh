@@ -94,7 +94,7 @@ public class SecurityConfig {
                     .hasRole("PRODUCT")
 
                 // --- API noi bo: quan ly danh muc so thich (chi PRODUCT)
-                .requestMatchers(HttpMethod.GET, "/api/v1/internal/interests").hasAnyRole("PRODUCT", "MANAGER")
+                .requestMatchers(HttpMethod.GET, "/api/v1/internal/interests").hasRole("PRODUCT")
                 .requestMatchers(HttpMethod.POST, "/api/v1/internal/interests").hasRole("PRODUCT")
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/internal/interests/*").hasRole("PRODUCT")
 

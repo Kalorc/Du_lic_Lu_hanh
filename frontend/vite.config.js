@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Chuyen tiep API sang Spring Boot de tranh van de CORS khi phat trien
       '/api': {
-        target: 'http://localhost:8080',
+        target: process.env.VITE_PROXY_TARGET ?? 'http://localhost:8080',
         changeOrigin: true,
       },
     },

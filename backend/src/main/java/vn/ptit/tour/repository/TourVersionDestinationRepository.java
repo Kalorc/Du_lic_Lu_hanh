@@ -6,6 +6,7 @@ import vn.ptit.tour.entity.TourVersionDestination;
 import vn.ptit.tour.entity.TourVersionDestinationId;
 
 import java.util.List;
+import java.util.Collection;
 
 public interface TourVersionDestinationRepository
         extends JpaRepository<TourVersionDestination, TourVersionDestinationId> {
@@ -18,4 +19,13 @@ public interface TourVersionDestinationRepository
            ORDER BY td.stopOrder
            """)
     List<Object[]> findByVersionId(Long versionId);
+
+    /** Batch destinations once for the candidate set, before global ranking/pagination. */
+    @Query("""
+           SELECT td.id.tourVersionId, td.id.destinationId
+           FROM TourVersionDestination td
+           WHERE td.id.tourVersionId IN :versionIds
+           ORDER BY td.id.tourVersionId, td.stopOrder, td.id.destinationId
+           """)
+    List<Object[]> findByVersionIds(Collection<Long> versionIds);
 }

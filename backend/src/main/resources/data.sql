@@ -144,75 +144,82 @@ INSERT INTO tour_version_interest_tags (tour_version_id, interest_id) VALUES
  (214,1);
 
 -- ------------------------- HINH ANH -------------------------
+-- Anh local: moi Tour co anh rieng; khong thay doi trang thai cong khai.
 INSERT INTO tour_media (media_id, tour_version_id, media_type, media_url, alt_text, caption, sort_order, is_cover) VALUES
- (501,201,'IMAGE','https://images.example.com/tours/da-nang-bien-am-thuc-cover.jpg','Bãi biển Mỹ Khê','Biển Mỹ Khê lúc bình minh',1,TRUE),
- (502,201,'IMAGE','https://images.example.com/tours/da-nang-cho-han.jpg','Chợ Hàn',NULL,2,FALSE),
- (503,213,'IMAGE','https://images.example.com/tours/da-nang-bien-van-hoa-cover.jpg','Ngũ Hành Sơn','Ngũ Hành Sơn',1,TRUE),
- (504,206,'IMAGE','https://images.example.com/tours/hoi-an-den-long-cover.jpg','Phố cổ Hội An',NULL,1,TRUE),
- (505,203,'IMAGE','https://images.example.com/tours/da-lat-cau-dat-cover.jpg','Đồi chè Cầu Đất',NULL,1,TRUE),
- (506,208,'IMAGE','https://images.example.com/tours/phu-quoc-cover.jpg','Bãi Sao Phú Quốc',NULL,1,TRUE),
- (507,209,'IMAGE','https://images.example.com/tours/sa-pa-cover.jpg','Fansipan',NULL,1,TRUE),
- (508,210,'IMAGE','https://images.example.com/tours/nha-trang-cover.jpg','Hòn Mun',NULL,1,TRUE),
- (509,212,'IMAGE','https://images.example.com/tours/da-nang-hoi-an-cover.jpg','Cầu Rồng',NULL,1,TRUE);
+ (501,201,'IMAGE','/images/tours/tour-101.webp','Bờ biển Mỹ Khê, Đà Nẵng','Ảnh minh họa: Bờ biển Mỹ Khê, Đà Nẵng',1,TRUE),
+ (502,202,'IMAGE','/images/tours/tour-102.webp','Bãi biển khu nghỉ dưỡng InterContinental trên bán đảo Sơn Trà','Ảnh minh họa: Bãi biển khu nghỉ dưỡng InterContinental trên bán đảo Sơn Trà',1,TRUE),
+ (503,203,'IMAGE','/images/tours/tour-103.webp','Đồi chè Cầu Đất trong sương, Đà Lạt','Ảnh minh họa: Đồi chè Cầu Đất trong sương, Đà Lạt',1,TRUE),
+ (504,204,'IMAGE','/images/tours/tour-104.webp','Cầu Vàng ở Bà Nà Hills','Ảnh minh họa: Cầu Vàng ở Bà Nà Hills',1,TRUE),
+ (505,205,'IMAGE','/images/tours/tour-105.webp','Cầu Rồng về đêm, Đà Nẵng','Ảnh minh họa: Cầu Rồng về đêm, Đà Nẵng',1,TRUE),
+ (506,206,'IMAGE','/images/tours/tour-106.webp','Dãy nhà vàng trong phố cổ Hội An','Ảnh minh họa: Dãy nhà vàng trong phố cổ Hội An',1,TRUE),
+ (507,207,'IMAGE','/images/tours/tour-107.webp','Ngọ Môn, Đại Nội Huế','Ảnh minh họa: Ngọ Môn, Đại Nội Huế',1,TRUE),
+ (508,208,'IMAGE','/images/tours/tour-108.webp','Bãi Sao, Phú Quốc','Ảnh minh họa: Bãi Sao, Phú Quốc',1,TRUE),
+ (509,209,'IMAGE','/images/tours/tour-109.webp','Đỉnh Fansipan nhìn từ đường mòn Hoàng Liên Sơn','Ảnh minh họa: Đỉnh Fansipan nhìn từ đường mòn Hoàng Liên Sơn',1,TRUE),
+ (510,210,'IMAGE','/images/tours/tour-110.webp','Bờ biển Hòn Mun, Nha Trang','Ảnh minh họa: Bờ biển Hòn Mun, Nha Trang',1,TRUE),
+ (511,211,'IMAGE','/images/tours/tour-111.webp','Chùa Trấn Quốc bên Hồ Tây, Hà Nội','Ảnh minh họa: Chùa Trấn Quốc bên Hồ Tây, Hà Nội',1,TRUE),
+ (512,212,'IMAGE','/images/tours/tour-112.webp','Phố ven sông ở Hội An','Ảnh minh họa: Phố ven sông ở Hội An',1,TRUE),
+ (513,213,'IMAGE','/images/tours/tour-113.webp','Chùa Tam Thai, Ngũ Hành Sơn','Ảnh minh họa: Chùa Tam Thai, Ngũ Hành Sơn',1,TRUE),
+ (514,214,'IMAGE','/images/tours/tour-114.webp','Sông Hàn và đường chân trời Đà Nẵng về đêm','Ảnh minh họa: Sông Hàn và đường chân trời Đà Nẵng về đêm',1,TRUE),
+ (515,215,'IMAGE','/images/tours/tour-101.webp','Bờ biển Mỹ Khê, Đà Nẵng','Ảnh minh họa: Bờ biển Mỹ Khê, Đà Nẵng',1,TRUE);
 
 -- ------------------------- CHUYEN KHOI HANH -------------------------
 INSERT INTO tour_departures (departure_id, departure_code, tour_id, tour_version_id,
        starts_at, ends_at, booking_opens_at, booking_closes_at, sales_status,
        total_seats, sellable_capacity, available_seats, hold_seats, confirmed_seats, active_offer_id) VALUES
  -- Tour 101: ba chuyen dang ban, gia khac nhau
- (301,'T101-D1',101,201, DATEADD('DAY',17,CURRENT_TIMESTAMP), DATEADD('DAY',19,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',14,CURRENT_TIMESTAMP),'OPEN',30,30,12,2,16,NULL),
- (302,'T101-D2',101,201, DATEADD('DAY',24,CURRENT_TIMESTAMP), DATEADD('DAY',26,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',21,CURRENT_TIMESTAMP),'OPEN',30,30,20,0,10,NULL),
- (303,'T101-D3',101,201, DATEADD('DAY',31,CURRENT_TIMESTAMP), DATEADD('DAY',33,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',28,CURRENT_TIMESTAMP),'OPEN',30,30,25,0,5,NULL),
+ (301,'T101-D1',101,201, (CURRENT_TIMESTAMP + INTERVAL '17' DAY), (CURRENT_TIMESTAMP + INTERVAL '19' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '14' DAY),'OPEN',30,30,12,2,16,NULL),
+ (302,'T101-D2',101,201, (CURRENT_TIMESTAMP + INTERVAL '24' DAY), (CURRENT_TIMESTAMP + INTERVAL '26' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '21' DAY),'OPEN',30,30,20,0,10,NULL),
+ (303,'T101-D3',101,201, (CURRENT_TIMESTAMP + INTERVAL '31' DAY), (CURRENT_TIMESTAMP + INTERVAL '33' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '28' DAY),'OPEN',30,30,25,0,5,NULL),
  -- Chuyen da dong ban (minh hoa loai bo theo sales_status)
- (304,'T101-D4',101,201, DATEADD('DAY',40,CURRENT_TIMESTAMP), DATEADD('DAY',42,CURRENT_TIMESTAMP),
-      DATEADD('DAY',10,CURRENT_TIMESTAMP), DATEADD('DAY',38,CURRENT_TIMESTAMP),'CLOSED',30,30,30,0,0,NULL),
+ (304,'T101-D4',101,201, (CURRENT_TIMESTAMP + INTERVAL '40' DAY), (CURRENT_TIMESTAMP + INTERVAL '42' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '10' DAY), (CURRENT_TIMESTAMP + INTERVAL '38' DAY),'CLOSED',30,30,30,0,0,NULL),
  -- Tour 113
- (314,'T113-D1',113,213, DATEADD('DAY',20,CURRENT_TIMESTAMP), DATEADD('DAY',22,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-20,CURRENT_TIMESTAMP), DATEADD('DAY',18,CURRENT_TIMESTAMP),'OPEN',25,25,9,1,15,NULL),
+ (314,'T113-D1',113,213, (CURRENT_TIMESTAMP + INTERVAL '20' DAY), (CURRENT_TIMESTAMP + INTERVAL '22' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-20' DAY), (CURRENT_TIMESTAMP + INTERVAL '18' DAY),'OPEN',25,25,9,1,15,NULL),
  -- Tour 102 (vuot ngan sach)
- (321,'T102-D1',102,202, DATEADD('DAY',18,CURRENT_TIMESTAMP), DATEADD('DAY',20,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-20,CURRENT_TIMESTAMP), DATEADD('DAY',16,CURRENT_TIMESTAMP),'OPEN',20,20,15,0,5,NULL),
+ (321,'T102-D1',102,202, (CURRENT_TIMESTAMP + INTERVAL '18' DAY), (CURRENT_TIMESTAMP + INTERVAL '20' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-20' DAY), (CURRENT_TIMESTAMP + INTERVAL '16' DAY),'OPEN',20,20,15,0,5,NULL),
  -- Tour 103 (sai dia diem)
- (331,'T103-D1',103,203, DATEADD('DAY',15,CURRENT_TIMESTAMP), DATEADD('DAY',17,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-25,CURRENT_TIMESTAMP), DATEADD('DAY',13,CURRENT_TIMESTAMP),'OPEN',25,25,18,0,7,NULL),
+ (331,'T103-D1',103,203, (CURRENT_TIMESTAMP + INTERVAL '15' DAY), (CURRENT_TIMESTAMP + INTERVAL '17' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-25' DAY), (CURRENT_TIMESTAMP + INTERVAL '13' DAY),'OPEN',25,25,18,0,7,NULL),
  -- Tour 104 (sai thoi luong)
- (341,'T104-D1',104,204, DATEADD('DAY',21,CURRENT_TIMESTAMP), DATEADD('DAY',24,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-25,CURRENT_TIMESTAMP), DATEADD('DAY',19,CURRENT_TIMESTAMP),'OPEN',25,25,20,0,5,NULL),
+ (341,'T104-D1',104,204, (CURRENT_TIMESTAMP + INTERVAL '21' DAY), (CURRENT_TIMESTAMP + INTERVAL '24' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-25' DAY), (CURRENT_TIMESTAMP + INTERVAL '19' DAY),'OPEN',25,25,20,0,5,NULL),
  -- Tour 105 (noi dung chua cong bo)
- (351,'T105-D1',105,205, DATEADD('DAY',19,CURRENT_TIMESTAMP), DATEADD('DAY',21,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-10,CURRENT_TIMESTAMP), DATEADD('DAY',17,CURRENT_TIMESTAMP),'OPEN',25,25,22,0,3,NULL),
+ (351,'T105-D1',105,205, (CURRENT_TIMESTAMP + INTERVAL '19' DAY), (CURRENT_TIMESTAMP + INTERVAL '21' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-10' DAY), (CURRENT_TIMESTAMP + INTERVAL '17' DAY),'OPEN',25,25,22,0,3,NULL),
  -- Tour 106
- (361,'T106-D1',106,206, DATEADD('DAY',12,CURRENT_TIMESTAMP), DATEADD('DAY',14,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',10,CURRENT_TIMESTAMP),'OPEN',30,30,14,0,16,NULL),
+ (361,'T106-D1',106,206, (CURRENT_TIMESTAMP + INTERVAL '12' DAY), (CURRENT_TIMESTAMP + INTERVAL '14' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '10' DAY),'OPEN',30,30,14,0,16,NULL),
  -- Tour 107
- (371,'T107-D1',107,207, DATEADD('DAY',16,CURRENT_TIMESTAMP), DATEADD('DAY',18,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',14,CURRENT_TIMESTAMP),'OPEN',30,30,21,0,9,NULL),
+ (371,'T107-D1',107,207, (CURRENT_TIMESTAMP + INTERVAL '16' DAY), (CURRENT_TIMESTAMP + INTERVAL '18' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '14' DAY),'OPEN',30,30,21,0,9,NULL),
  -- Tour 108
- (381,'T108-D1',108,208, DATEADD('DAY',25,CURRENT_TIMESTAMP), DATEADD('DAY',28,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',23,CURRENT_TIMESTAMP),'OPEN',24,24,11,0,13,NULL),
+ (381,'T108-D1',108,208, (CURRENT_TIMESTAMP + INTERVAL '25' DAY), (CURRENT_TIMESTAMP + INTERVAL '28' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '23' DAY),'OPEN',24,24,11,0,13,NULL),
  -- Tour 109
- (391,'T109-D1',109,209, DATEADD('DAY',22,CURRENT_TIMESTAMP), DATEADD('DAY',24,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',20,CURRENT_TIMESTAMP),'OPEN',28,28,17,0,11,NULL),
+ (391,'T109-D1',109,209, (CURRENT_TIMESTAMP + INTERVAL '22' DAY), (CURRENT_TIMESTAMP + INTERVAL '24' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '20' DAY),'OPEN',28,28,17,0,11,NULL),
  -- Tour 110: chuyen re nhat lai HET CHO -> minh hoa availableOnly
- (401,'T110-D1',110,210, DATEADD('DAY',14,CURRENT_TIMESTAMP), DATEADD('DAY',16,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',12,CURRENT_TIMESTAMP),'OPEN',26,26,13,0,13,NULL),
- (402,'T110-D2',110,210, DATEADD('DAY',28,CURRENT_TIMESTAMP), DATEADD('DAY',30,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',26,CURRENT_TIMESTAMP),'OPEN',26,26,0,0,26,NULL),
+ (401,'T110-D1',110,210, (CURRENT_TIMESTAMP + INTERVAL '14' DAY), (CURRENT_TIMESTAMP + INTERVAL '16' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '12' DAY),'OPEN',26,26,13,0,13,NULL),
+ (402,'T110-D2',110,210, (CURRENT_TIMESTAMP + INTERVAL '28' DAY), (CURRENT_TIMESTAMP + INTERVAL '30' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '26' DAY),'OPEN',26,26,0,0,26,NULL),
  -- Tour 111
- (411,'T111-D1',111,211, DATEADD('DAY',10,CURRENT_TIMESTAMP), DATEADD('DAY',11,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',8,CURRENT_TIMESTAMP),'OPEN',35,35,24,0,11,NULL),
+ (411,'T111-D1',111,211, (CURRENT_TIMESTAMP + INTERVAL '10' DAY), (CURRENT_TIMESTAMP + INTERVAL '11' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '8' DAY),'OPEN',35,35,24,0,11,NULL),
  -- Tour 112
- (421,'T112-D1',112,212, DATEADD('DAY',19,CURRENT_TIMESTAMP), DATEADD('DAY',21,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',17,CURRENT_TIMESTAMP),'OPEN',30,30,16,0,14,NULL),
+ (421,'T112-D1',112,212, (CURRENT_TIMESTAMP + INTERVAL '19' DAY), (CURRENT_TIMESTAMP + INTERVAL '21' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '17' DAY),'OPEN',30,30,16,0,14,NULL),
  -- Tour 114 (tour ARCHIVED)
- (431,'T114-D1',114,214, DATEADD('DAY',20,CURRENT_TIMESTAMP), DATEADD('DAY',22,CURRENT_TIMESTAMP),
-      DATEADD('DAY',-30,CURRENT_TIMESTAMP), DATEADD('DAY',18,CURRENT_TIMESTAMP),'OPEN',30,30,20,0,10,NULL),
+ (431,'T114-D1',114,214, (CURRENT_TIMESTAMP + INTERVAL '20' DAY), (CURRENT_TIMESTAMP + INTERVAL '22' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '-30' DAY), (CURRENT_TIMESTAMP + INTERVAL '18' DAY),'OPEN',30,30,20,0,10,NULL),
  -- Chuyen chua mo cua so dat (booking_opens_at o tuong lai)
- (441,'T106-D2',106,206, DATEADD('DAY',60,CURRENT_TIMESTAMP), DATEADD('DAY',62,CURRENT_TIMESTAMP),
-      DATEADD('DAY',30,CURRENT_TIMESTAMP), DATEADD('DAY',58,CURRENT_TIMESTAMP),'OPEN',30,30,30,0,0,NULL);
+ (441,'T106-D2',106,206, (CURRENT_TIMESTAMP + INTERVAL '60' DAY), (CURRENT_TIMESTAMP + INTERVAL '62' DAY),
+      (CURRENT_TIMESTAMP + INTERVAL '30' DAY), (CURRENT_TIMESTAMP + INTERVAL '58' DAY),'OPEN',30,30,30,0,0,NULL);
 
 -- ------------------------- PHIEN BAN GIA -------------------------
 INSERT INTO departure_offer_versions (offer_id, departure_id, version_no, approval_status,

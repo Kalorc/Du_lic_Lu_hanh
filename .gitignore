@@ -1,0 +1,16 @@
+backend/target/
+frontend/node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+.env
+.env.*
+!.env.example
+*.log
+*.h2.db
+*.mv.db
+.superpowers/
+docs/
+demo-assets/
+scripts/
+qa/
