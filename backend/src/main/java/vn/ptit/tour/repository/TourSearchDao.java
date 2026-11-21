@@ -8,6 +8,7 @@ import vn.ptit.tour.dto.CandidateRow;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Buoc 1-2 cua thuat toan: chon ung vien va ap HARD FILTERS, sau do lay
@@ -49,11 +50,13 @@ public class TourSearchDao {
         List<String> where = new ArrayList<>();
         where.add("t.lifecycle_status = 'ACTIVE'");
         where.add("v.content_status = 'PUBLISHED'");
+        where.add("v.tour_id = t.tour_id");
         where.add("d.tour_version_id = t.current_published_version_id");
         where.add("d.sales_status = 'OPEN'");
         where.add("d.booking_opens_at <= :asOf");
         where.add("d.booking_closes_at >= :asOf");
         where.add("o.approval_status = 'APPROVED'");
+        where.add("o.departure_id = d.departure_id");
 
         if (availableOnly) {
             where.add("d.available_seats > 0");
@@ -76,16 +79,19 @@ public class TourSearchDao {
         }
         if (keyword != null && !keyword.isBlank()) {
             where.add("""
-                      (LOWER(v.title) LIKE :kw
-                       OR LOWER(COALESCE(v.summary, '')) LIKE :kw
-                       OR LOWER(COALESCE(v.description, '')) LIKE :kw
-                       OR LOWER(t.tour_code) LIKE :kw
+                      (LOWER(v.title) LIKE :kw ESCAPE '!'
+                       OR LOWER(COALESCE(v.summary, '')) LIKE :kw ESCAPE '!'
+                       OR LOWER(COALESCE(v.description, '')) LIKE :kw ESCAPE '!'
+                       OR LOWER(t.tour_code) LIKE :kw ESCAPE '!'
                        OR EXISTS (SELECT 1 FROM tour_version_destinations td2
                                     JOIN destinations dd ON dd.destination_id = td2.destination_id
                                    WHERE td2.tour_version_id = v.tour_version_id
-                                     AND LOWER(dd.name) LIKE :kw))
+                                     AND LOWER(dd.name) LIKE :kw ESCAPE '!'))
                       """);
-            p.addValue("kw", "%" + keyword.toLowerCase() + "%");
+            // Keyword is literal text; SQL wildcard characters must not broaden the filter.
+            String literal = keyword.toLowerCase(Locale.ROOT)
+                    .replace("!", "!!").replace("%", "!%").replace("_", "!_");
+            p.addValue("kw", "%" + literal + "%");
         }
 
         String sql = """
@@ -153,10 +159,12 @@ public class TourSearchDao {
                     WHERE t.tour_id = :tourId
                       AND t.lifecycle_status = 'ACTIVE'
                       AND v.content_status = 'PUBLISHED'
+                      AND v.tour_id = t.tour_id
                       AND d.tour_version_id = t.current_published_version_id
                       AND d.sales_status = 'OPEN'
                       AND d.booking_opens_at <= :asOf
                       AND d.booking_closes_at >= :asOf
+                      AND o.departure_id = d.departure_id
                       AND o.approval_status = 'APPROVED'%s
                 ) c
                 WHERE c.rn = 1

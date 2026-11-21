@@ -70,7 +70,7 @@ public class InterestAdminService {
     public VersionInterestsDto replaceVersionInterests(Long versionId,
                                                       AssignInterestsRequest request,
                                                       Long actorUserId) {
-        TourVersion version = versionRepository.findById(versionId)
+        TourVersion version = versionRepository.findForTagUpdate(versionId)
                 .orElseThrow(() -> new ApiException(ErrorCode.VERSION_NOT_FOUND));
 
         if (version.getContentStatus() != ContentStatus.DRAFT) {

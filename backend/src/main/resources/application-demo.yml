@@ -1,0 +1,17 @@
+# Local presentation profile: isolated in-memory data is rebuilt on each start.
+server:
+  address: 127.0.0.1
+  port: 18080
+
+spring:
+  h2:
+    console:
+      enabled: false
+
+app:
+  cors:
+    allowed-origins: "http://127.0.0.1:15173,http://localhost:15173"
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration: ERROR

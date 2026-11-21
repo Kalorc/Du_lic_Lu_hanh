@@ -20,6 +20,7 @@ public enum ErrorCode {
     TAG_UPDATE_CONFLICT(HttpStatus.CONFLICT, "Xung dot khi cap nhat so thich cua phien ban"),
 
     INVALID_INTEREST_CODE(HttpStatus.UNPROCESSABLE_ENTITY, "Ma so thich khong ton tai hoac khong active"),
+    INVALID_DESTINATION(HttpStatus.UNPROCESSABLE_ENTITY, "Diem den khong ton tai hoac khong active"),
     DUPLICATE_INTEREST_CODE(HttpStatus.UNPROCESSABLE_ENTITY, "Ma so thich bi trung"),
 
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Vuot gioi han so lan goi"),

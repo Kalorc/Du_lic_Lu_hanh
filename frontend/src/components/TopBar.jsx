@@ -1,27 +1,26 @@
-import { NavLink } from 'react-router-dom';
-import { auth } from '../api/client.js';
+import { Link, NavLink } from 'react-router-dom';
+import Icon from './Icon.jsx';
 
 export default function TopBar() {
-  const user = auth.getUser();
-
   return (
     <header className="topbar">
       <div className="topbar-inner">
-        <div className="brand">
-          Du lịch &amp; Lữ hành <span>Thông minh</span>
-        </div>
-        <nav className="nav">
+        <Link to="/tours" className="brand">
+          <span className="brand-icon"><Icon name="compass" /></span>
+          <span>
+            Du lịch &amp; Lữ hành
+            <small>Thông minh</small>
+          </span>
+        </Link>
+        <nav className="nav" aria-label="Điều hướng chính">
           <NavLink to="/tours" className={({ isActive }) => (isActive ? 'active' : '')}>
+            <Icon name="compass" />
             Tra cứu &amp; Gợi ý tour
           </NavLink>
           <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>
+            <Icon name="lock" />
             Quản trị sở thích
           </NavLink>
-          {user && (
-            <span className="who">
-              {user.fullName} · {user.role}
-            </span>
-          )}
         </nav>
       </div>
     </header>

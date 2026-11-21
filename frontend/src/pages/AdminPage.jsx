@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { api, auth } from '../api/client.js';
 import { INTEREST_MAX } from '../constants.js';
 import ErrorNotice from '../components/ErrorNotice.jsx';
+import Icon from '../components/Icon.jsx';
 import Notice from '../components/Notice.jsx';
 
 /** Dang nhap de lay JWT cho cac API noi bo. */
 function LoginForm({ onLoggedIn }) {
   const [username, setUsername] = useState('product01');
-  const [password, setPassword] = useState('123456');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -32,29 +33,32 @@ function LoginForm({ onLoggedIn }) {
 
   return (
     <form className="card card-pad login-box" onSubmit={submit}>
-      <h2 style={{ marginTop: 0, fontSize: 16 }}>Đăng nhập nội bộ</h2>
+      <h2>Đăng nhập nội bộ</h2>
       <ErrorNotice error={error} />
       <div className="field">
         <label htmlFor="u">Tài khoản</label>
-        <input id="u" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input id="u" type="text" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
       </div>
       <div className="field">
         <label htmlFor="p">Mật khẩu</label>
-        <input id="p" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input id="p" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       <button className="btn" type="submit" disabled={busy}>
         {busy ? 'Đang đăng nhập…' : 'Đăng nhập'}
       </button>
-      <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 0 }}>
-        Tài khoản demo (mật khẩu <code>123456</code>): <code>product01</code> gắn và quản lý sở
-        thích, <code>manager01</code> chỉ xem, <code>khach01</code> không có quyền nội bộ.
-      </p>
+      <details className="login-help">
+        <summary>Tài khoản demo</summary>
+        <p>
+          Dùng mật khẩu demo đã cấu hình cho môi trường cục bộ. Tài khoản <code>product01</code> quản lý
+          sở thích, <code>manager01</code> chỉ xem phiên bản.
+        </p>
+      </details>
     </form>
   );
 }
 
 /** API 6 + 7: xem va gan lai so thich cho mot phien ban noi dung Tour. */
-function VersionTagEditor({ interests }) {
+function VersionTagEditor({ interests, canEdit }) {
   const [versionId, setVersionId] = useState('215');
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState([]);
@@ -83,7 +87,7 @@ function VersionTagEditor({ interests }) {
     setError(null);
     setOkMessage(null);
     try {
-      const res = await api.replaceVersionInterests(versionId.trim(), selected);
+      const res = await api.replaceVersionInterests(data.tourVersionId, selected);
       setData(res);
       setSelected(res.interests.map((i) => i.code));
       setOkMessage(`Đã lưu ${res.interests.length} sở thích cho phiên bản ${res.tourVersionId}.`);
@@ -102,18 +106,28 @@ function VersionTagEditor({ interests }) {
     });
   };
 
+  // Historical inactive mappings remain visible until the user explicitly removes them.
+  const options = [...new Map([...(data?.interests ?? []), ...interests]
+    .map((interest) => [interest.code, interest])).values()];
+  const hasInactiveSelection = options.some((interest) => !interest.active && selected.includes(interest.code));
+
   return (
-    <section className="card card-pad">
-      <h2 style={{ marginTop: 0, fontSize: 16 }}>Gắn sở thích cho phiên bản Tour</h2>
-      <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 0 }}>
-        Chỉ phiên bản ở trạng thái <code>DRAFT</code> được sửa. Phiên bản đã công bố trả về
-        lỗi <code>VERSION_LOCKED</code> để giữ nguyên phân loại của bản đang bán.
+    <section className="card card-pad admin-panel">
+      <h2>Gắn sở thích cho phiên bản Tour</h2>
+      <p className="hint">
+        Vai trò PRODUCT chỉ chỉnh sửa được sở thích của phiên bản nháp (DRAFT).
       </p>
 
       <div className="field">
-        <label htmlFor="vid">tourVersionId</label>
+        <label htmlFor="vid">Mã phiên bản (tourVersionId)</label>
         <div className="btn-row">
-          <input id="vid" value={versionId} onChange={(e) => setVersionId(e.target.value)} />
+          <input id="vid" type="text" inputMode="numeric" value={versionId} disabled={busy} onChange={(e) => {
+            setVersionId(e.target.value);
+            setData(null);
+            setSelected([]);
+            setError(null);
+            setOkMessage(null);
+          }} />
           <button className="btn btn-ghost" type="button" onClick={load} disabled={busy}>
             Tải
           </button>
@@ -128,10 +142,12 @@ function VersionTagEditor({ interests }) {
 
       {data && (
         <>
-          <dl className="kv" style={{ margin: '14px 0' }}>
+          <dl className="kv">
+            <dt>Phiên bản đã tải</dt>
+            <dd>{data.tourVersionId}</dd>
             <dt>Tour</dt>
             <dd>
-              {data.title} (tourId {data.tourId})
+              {data.title}
             </dd>
             <dt>Trạng thái nội dung</dt>
             <dd>
@@ -140,33 +156,40 @@ function VersionTagEditor({ interests }) {
               </span>
             </dd>
             <dt>Sửa được</dt>
-            <dd>{data.editable ? 'Có' : 'Không'}</dd>
+            <dd>{canEdit && data.editable ? 'Có' : 'Không'}</dd>
           </dl>
 
-          <div className="field">
-            <label>
+          <fieldset className="field interest-field">
+            <legend>
               Sở thích ({selected.length}/{INTEREST_MAX})
-            </label>
+            </legend>
             <div className="chips">
-              {interests
-                .filter((i) => i.active)
+              {options
+                .filter((i) => i.active || data.interests.some((assigned) => assigned.code === i.code))
                 .map((i) => (
                   <button
                     key={i.code}
                     type="button"
                     className={`chip ${selected.includes(i.code) ? 'on' : ''}`}
+                    aria-pressed={selected.includes(i.code)}
                     onClick={() => toggle(i.code)}
-                    disabled={!data.editable}
+                    disabled={busy || !canEdit || !data.editable || (!i.active && !selected.includes(i.code))}
                   >
-                    {i.name}
+                    <Icon name="check" />
+                    {i.name}{!i.active ? ' (đã tắt)' : ''}
                   </button>
                 ))}
             </div>
-          </div>
+          </fieldset>
 
-          <button className="btn" type="button" onClick={save} disabled={busy || !data.editable}>
-            {busy ? 'Đang lưu…' : 'Lưu danh sách sở thích'}
-          </button>
+          {canEdit && hasInactiveSelection && (
+            <p className="hint">Thẻ đã tắt được giữ trong lịch sử. Bỏ chọn thẻ đã tắt trước khi thay thế danh sách.</p>
+          )}
+          {canEdit && (
+            <button className="btn" type="button" onClick={save} disabled={busy || !data.editable || hasInactiveSelection}>
+              {busy ? 'Đang lưu…' : 'Lưu danh sách sở thích'}
+            </button>
+          )}
         </>
       )}
     </section>
@@ -221,20 +244,21 @@ function InterestCatalogEditor({ interests, reload }) {
   };
 
   return (
-    <section className="card card-pad">
-      <h2 style={{ marginTop: 0, fontSize: 16 }}>Danh mục sở thích</h2>
+    <section className="card card-pad admin-panel">
+      <h2>Danh mục sở thích</h2>
 
       <ErrorNotice error={error} />
       {okMessage && <Notice kind="ok">{okMessage}</Notice>}
 
-      <table style={{ margin: '12px 0 20px' }}>
+      <div className="table-scroll admin-table" tabIndex={0} role="region" aria-label="Bảng danh mục sở thích">
+      <table>
         <thead>
           <tr>
             <th>Mã</th>
             <th>Tên</th>
             <th>Thứ tự</th>
             <th>Trạng thái</th>
-            <th />
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -264,13 +288,15 @@ function InterestCatalogEditor({ interests, reload }) {
           ))}
         </tbody>
       </table>
+      </div>
 
-      <form onSubmit={create}>
-        <h3 style={{ fontSize: 14, margin: '0 0 10px' }}>Thêm sở thích mới</h3>
+      <form className="catalog-form" onSubmit={create}>
+        <h3>Thêm sở thích mới</h3>
         <div className="field">
           <label htmlFor="code">Mã</label>
           <input
             id="code"
+            type="text"
             placeholder="ECO_TOURISM"
             value={form.code}
             onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -282,6 +308,7 @@ function InterestCatalogEditor({ interests, reload }) {
           <label htmlFor="name">Tên hiển thị</label>
           <input
             id="name"
+            type="text"
             placeholder="Du lịch sinh thái"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -330,27 +357,42 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (user) reload();
+    if (user?.role === 'PRODUCT') reload();
+    else setInterests([]);
   }, [user]);
 
   if (!user) {
     return (
-      <main className="page">
-        <LoginForm onLoggedIn={() => setUser(auth.getUser())} />
+      <main className="page login-page">
+        <div className="login-layout">
+          <div className="login-intro">
+            <span className="login-icon"><Icon name="lock" /></span>
+            <h1>Quản trị sở thích Tour</h1>
+            <p>Quản lý danh mục sở thích và xem cách các tour được phân loại theo từng phiên bản.</p>
+          </div>
+          <LoginForm onLoggedIn={() => setUser(auth.getUser())} />
+        </div>
       </main>
     );
   }
 
   const canEdit = user.role === 'PRODUCT';
+  const canReadVersion = canEdit || user.role === 'MANAGER';
 
   return (
     <main className="page">
-      <div className="page-head">
-        <h1>Quản trị sở thích Tour</h1>
-        <p>
-          Đang đăng nhập: <strong>{user.fullName}</strong> · vai trò <strong>{user.role}</strong>.{' '}
+      <div className="page-head admin-head">
+        <div>
+          <h1>Quản trị sở thích Tour</h1>
+          <p>Xem sở thích của từng phiên bản tour và danh mục theo quyền được cấp.</p>
+        </div>
+        <div className="admin-session">
+          <div>
+            <strong>{user.fullName}</strong>
+            <span className="pill role-pill">{user.role}</span>
+          </div>
           <button
-            className="btn btn-ghost btn-sm"
+            className="btn btn-ghost"
             type="button"
             onClick={() => {
               auth.clear();
@@ -359,24 +401,23 @@ export default function AdminPage() {
           >
             Đăng xuất
           </button>
-        </p>
+        </div>
       </div>
 
       <ErrorNotice error={error} />
 
       {!canEdit && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="admin-access">
           <Notice kind="info">
-            Vai trò <strong>{user.role}</strong> chỉ được xem sở thích của phiên bản Tour. Các
-            thao tác gắn sở thích và sửa danh mục dành cho vai trò <strong>PRODUCT</strong>, nên
-            server sẽ trả về <code>FORBIDDEN</code> nếu bạn thử lưu.
+            {canReadVersion ? 'Bạn chỉ có quyền xem sở thích của phiên bản Tour.' : 'Bạn không có quyền truy cập nội bộ Module A.'}{' '}
+            Thao tác gắn sở thích và quản lý danh mục dành cho <strong>PRODUCT</strong>.
           </Notice>
         </div>
       )}
 
       <div className="admin-grid">
-        <VersionTagEditor interests={interests} />
-        <InterestCatalogEditor interests={interests} reload={reload} />
+        {canReadVersion && <VersionTagEditor interests={interests} canEdit={canEdit} />}
+        {canEdit && <InterestCatalogEditor interests={interests} reload={reload} />}
       </div>
     </main>
   );

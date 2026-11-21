@@ -15,6 +15,12 @@ export default function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/tours" replace />} />
       </Routes>
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <span>Du lịch &amp; Lữ hành Thông minh</span>
+          <a href="/images/credits.html">Nguồn ảnh</a>
+        </div>
+      </footer>
     </>
   );
 }

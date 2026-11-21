@@ -30,8 +30,10 @@ spring:
     default-property-inclusion: always
 
 app:
+  demo:
+    password: "${APP_DEMO_PASSWORD:}"
   jwt:
-    secret: "doi-mat-khau-nay-trong-moi-truong-that-32-ky-tu-tro-len-ptit-2026"
+    secret: "${APP_JWT_SECRET:}"
     expiration-minutes: 480
   cors:
     allowed-origins: "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"

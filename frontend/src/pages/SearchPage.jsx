@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { SIZE_DEFAULT } from '../constants.js';
 import FilterPanel from '../components/FilterPanel.jsx';
 import TourCard from '../components/TourCard.jsx';
 import ErrorNotice from '../components/ErrorNotice.jsx';
-import Notice from '../components/Notice.jsx';
+import Icon from '../components/Icon.jsx';
 
 const EMPTY_FORM = {
   keyword: '',
@@ -27,23 +27,46 @@ export default function SearchPage() {
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [catalogError, setCatalogError] = useState(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const latestRequest = useRef(0);
+  const latestCatalogRequest = useRef(0);
 
   const interestNames = useMemo(
     () => Object.fromEntries(interests.map((i) => [i.code, i.name])),
     [interests],
   );
+  const destinationNames = useMemo(
+    () => Object.fromEntries(destinations.map((d) => [d.destinationId, d.name])),
+    [destinations],
+  );
 
-  // Nap danh muc cho bo loc (API 1 va API 2)
-  useEffect(() => {
-    Promise.all([api.listInterests(), api.listDestinations('CITY')])
-      .then(([is, ds]) => {
-        setInterests(is);
-        setDestinations(ds);
-      })
-      .catch(setError);
+  const loadCatalogs = useCallback(async () => {
+    const requestId = ++latestCatalogRequest.current;
+    setCatalogLoading(true);
+    try {
+      const [interestList, destinationList] = await Promise.all([
+        api.listInterests(), api.listDestinations('CITY'),
+      ]);
+      if (requestId !== latestCatalogRequest.current) return;
+      setInterests(interestList);
+      setDestinations(destinationList);
+      setCatalogError(null);
+    } catch (catalogFailure) {
+      if (requestId === latestCatalogRequest.current) setCatalogError(catalogFailure);
+    } finally {
+      if (requestId === latestCatalogRequest.current) setCatalogLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    loadCatalogs();
+    return () => { latestCatalogRequest.current += 1; };
+  }, [loadCatalogs]);
+
   const runSearch = useCallback(async (f, pageNo) => {
+    // TC31: only the newest applied filters may update results, errors or loading.
+    const requestId = ++latestRequest.current;
     setLoading(true);
     setError(null);
     const params = {
@@ -62,19 +85,22 @@ export default function SearchPage() {
       const res = f.interestCodes.length
         ? await api.recommendTours(params)
         : await api.searchTours(params);
+      if (requestId !== latestRequest.current) return;
       setResult(res.data);
       setMeta(res.meta);
     } catch (e) {
+      if (requestId !== latestRequest.current) return;
       setResult(null);
       setMeta(null);
       setError(e);
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     runSearch(applied, page);
+    return () => { latestRequest.current += 1; };
   }, [applied, page, runSearch]);
 
   const submit = () => {
@@ -90,16 +116,28 @@ export default function SearchPage() {
 
   const items = result?.items ?? [];
   const pagination = result?.pagination;
+  const visibleError = error ?? catalogError;
+
+  const retry = () => {
+    if (catalogError) loadCatalogs();
+    if (error) runSearch(applied, page);
+  };
 
   return (
     <main className="page">
-      <div className="page-head">
-        <h1>Tra cứu tour và gợi ý tour theo sở thích</h1>
-        <p>
-          Hệ thống lọc bắt buộc theo điều kiện bạn chọn, sau đó xếp tour trùng nhiều sở thích
-          hơn lên đầu. Điểm trùng là tỷ lệ sở thích khớp, không phải dự báo mức độ hài lòng.
-        </p>
-      </div>
+      <section className="discovery-hero" aria-labelledby="discover-title">
+        <div className="discovery-hero-copy">
+          <h1 id="discover-title">
+            Khám phá <span className="nowrap">Việt Nam</span>
+            <em>theo cách <span className="nowrap">của bạn.</span></em>
+          </h1>
+          <p>Tìm tour theo điểm đến, ngân sách và sở thích của bạn.</p>
+          <a className="btn hero-link" href="#bo-loc">
+            Khám phá các tour <Icon name="down" />
+          </a>
+        </div>
+        <div className="hero-location"><Icon name="pin" /> Mỹ Khê, Đà Nẵng</div>
+      </section>
 
       <div className="layout">
         <FilterPanel
@@ -112,9 +150,11 @@ export default function SearchPage() {
           loading={loading}
         />
 
-        <section>
+        <section className="results" aria-labelledby="result-title" aria-busy={loading}>
           <div className="result-head">
-            <div className="result-count">
+            <div>
+              <h2 id="result-title">{meta?.personalized ? 'Tour gợi ý cho bạn' : 'Khám phá tour'}</h2>
+              <div className="result-count" aria-live="polite">
               {pagination ? (
                 <>
                   Tìm thấy <strong>{pagination.totalItems}</strong> tour
@@ -126,32 +166,34 @@ export default function SearchPage() {
                   )}
                 </>
               ) : (
-                'Đang tải kết quả…'
+                loading ? 'Đang tải kết quả…' : error ? 'Không tải được kết quả' : null
               )}
+              </div>
             </div>
             {meta && (
-              <div className="result-count">
-                Sắp xếp:{' '}
-                <strong>
-                  {meta.sort === 'RELEVANCE' ? 'Độ trùng sở thích' : 'Giá tăng dần'}
-                </strong>
+              <div className="result-sort">
+                <Icon name="sliders" />
+                {meta.sort === 'RELEVANCE' ? 'Độ trùng sở thích' : 'Giá tăng dần'}
               </div>
             )}
           </div>
 
-          <ErrorNotice error={error} />
-
-          {meta && !meta.personalized && !error && (
-            <div style={{ marginBottom: 12 }}>
-              <Notice kind="info">
-                Bạn chưa chọn sở thích nên kết quả được sắp theo giá tăng dần và chưa chấm
-                điểm phù hợp.
-              </Notice>
+          {visibleError && (
+            <div className="result-error">
+              <ErrorNotice error={visibleError} />
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={retry}
+                disabled={loading || catalogLoading}
+              >
+                {catalogLoading ? 'Đang tải…' : 'Thử lại'}
+              </button>
             </div>
           )}
 
           {loading && (
-            <div className="tour-list">
+            <div className="tour-list" aria-hidden="true">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="skeleton" />
               ))}
@@ -160,6 +202,7 @@ export default function SearchPage() {
 
           {!loading && !error && items.length === 0 && (
             <div className="card empty">
+              <Icon name="search" />
               <h3>Không có tour nào đạt điều kiện</h3>
               <p>
                 Hãy thử nới ngân sách, bỏ bớt điều kiện số ngày, hoặc tắt tùy chọn
@@ -171,19 +214,24 @@ export default function SearchPage() {
           {!loading && items.length > 0 && (
             <div className="tour-list">
               {items.map((item) => (
-                <TourCard key={item.tourId} item={item} interestNames={interestNames} />
+                <TourCard
+                  key={item.tourId}
+                  item={item}
+                  interestNames={interestNames}
+                  destinationNames={destinationNames}
+                />
               ))}
             </div>
           )}
 
           {pagination && pagination.totalPages > 1 && (
-            <div className="pager">
+            <nav className="pager" aria-label="Trang kết quả">
               <button
                 className="btn btn-ghost btn-sm"
                 disabled={page <= 1 || loading}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                ← Trang trước
+                <Icon name="back" /> Trang trước
               </button>
               <span>
                 {pagination.page} / {pagination.totalPages}
@@ -193,19 +241,9 @@ export default function SearchPage() {
                 disabled={page >= pagination.totalPages || loading}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Trang sau →
+                Trang sau <Icon name="forward" />
               </button>
-            </div>
-          )}
-
-          {meta && (
-            <div className="card card-pad" style={{ marginTop: 18 }}>
-              <div className="meta-box">
-                asOf={meta.asOf} · priceBasis={meta.priceBasis} · availableOnly=
-                {String(meta.availableOnly)} · appliedInterestCodes=[
-                {(meta.appliedInterestCodes ?? []).join(', ')}]
-              </div>
-            </div>
+            </nav>
           )}
         </section>
       </div>
